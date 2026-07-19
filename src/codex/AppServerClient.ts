@@ -5,6 +5,7 @@ import { detectCodexExecutable } from './CodexExecutable';
 import { JsonLineTransport } from './JsonLineTransport';
 import { initializeAppServer } from './Initialization';
 import type { ConnectionState, ServerRequest } from './ProtocolTypes';
+import { sanitizeLogLine } from './SanitizedLog';
 
 export class AppServerClient extends EventEmitter {
   private state: ConnectionState = 'stopped';
@@ -81,7 +82,7 @@ export class AppServerClient extends EventEmitter {
 
   private readonly onStdout = (chunk: Buffer): void => this.transport?.handleChunk(chunk);
   private readonly onStderr = (chunk: Buffer): void => {
-    const message = chunk.toString().trim();
+    const message = sanitizeLogLine(chunk.toString());
     if (message !== '') this.output.appendLine(`[app-server] ${message}`);
   };
   private readonly onExit = (exit: ProcessExit): void => {
