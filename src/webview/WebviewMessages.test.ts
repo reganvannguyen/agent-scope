@@ -22,5 +22,6 @@ describe('parseWebviewMessage', () => {
     expect(parseWebviewMessage({ type: 'saveProjectMap', map: { schemaVersion: 1 } })).toBeDefined();
     expect(parseWebviewMessage({ type: 'saveProjectMap', map: 'unsafe' })).toBeUndefined();
     expect(parseWebviewMessage({ type: 'runVisualizationDemo' })).toEqual({ type: 'runVisualizationDemo' });
+    expect(parseWebviewMessage({ type: 'clearGraphSelection' })).toEqual({ type: 'clearGraphSelection' });
   });
 });

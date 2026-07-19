@@ -21,7 +21,9 @@ export function App(): React.JSX.Element {
     return () => window.removeEventListener('message', listener);
   }, []);
   const activeWarning = state.warning?.startsWith('This thread may be active');
-  const viewMode = state.viewMode ?? 'combined';
+  const requestedMode = state.viewMode ?? 'combined';
+  const editingProjectMap = requestedMode === 'project' && ((state.projectSuggestions?.length ?? 0) > 0 || state.visualization?.projectMap?.components.length === 0);
+  const viewMode = requestedMode === 'chat' ? 'chat' : editingProjectMap ? 'project' : 'combined';
   return <div className="app-shell">
     <header className="app-header"><div><h1>Codex Workspace</h1><span>{state.selectedThread?.cwd ?? 'Current workspace'}</span></div><ConnectionStatus state={state.connection} account={state.account} /></header>
     {state.error ? <div className="banner error" role="alert"><span>{state.error}</span><button onClick={() => post({ type: 'openOutputChannel' })}>Open output</button></div> : null}

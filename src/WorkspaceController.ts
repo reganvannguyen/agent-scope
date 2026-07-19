@@ -128,6 +128,7 @@ export class WorkspaceController implements vscode.Disposable {
         case 'openOutputChannel': this.output.show(true); return;
         case 'selectViewMode': this.store.update({ viewMode: message.mode }); await this.context.workspaceState.update(pref.viewMode, message.mode); return;
         case 'selectGraphEntity': this.selectGraphEntity(message.kind, message.id); return;
+        case 'clearGraphSelection': this.store.update({ selectedGraphEntity: undefined }); return;
         case 'initializeProjectMap': await this.initializeProjectMap(); return;
         case 'scanProjectMap': await this.scanProjectMap(); return;
         case 'saveProjectMap': await this.saveProjectMap(message.map); return;

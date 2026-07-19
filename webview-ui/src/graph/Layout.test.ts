@@ -10,7 +10,7 @@ describe('graph layout', () => {
     const visualization: Visualization = { agents: { root: agent('root', null, true), child: agent('child', 'root', false), sibling: agent('sibling', 'root', false), grandchild: agent('grandchild', 'child', false) }, hierarchyEdges: {
       one: { id: 'one', parentThreadId: 'root', childThreadId: 'child' }, two: { id: 'two', parentThreadId: 'root', childThreadId: 'sibling' }, three: { id: 'three', parentThreadId: 'child', childThreadId: 'grandchild' }
     }, connections: {}, componentRuntime: {}, unmappedActivityCount: 0, demo: false };
-    const nodes = graphElements(state(visualization), 'agents').nodes;
+    const nodes = graphElements(state(visualization)).nodes;
     const position = (id: string) => nodes.find(node => node.id === `agent:${id}`)?.position;
     expect(position('root')?.y).toBeLessThan(position('child')?.y ?? 0);
     expect(position('child')?.y).toBeLessThan(position('grandchild')?.y ?? 0);
@@ -18,9 +18,9 @@ describe('graph layout', () => {
   });
   it('preserves saved project positions when agents or components are added', () => {
     const visualization: Visualization = { agents: { root: agent('root', null, true) }, hierarchyEdges: {}, projectMap: { project: { name: 'Test' }, components: [{ id: 'api', name: 'API', type: 'backend', paths: [], position: { x: 100, y: 200 } }], edges: [] }, connections: {}, componentRuntime: { api: { activeAgentIds: [], activeActivityTypes: [], recentlyTouchedFiles: [], pendingApprovalCount: 0 } }, unmappedActivityCount: 0, demo: false };
-    const before = graphElements(state(visualization), 'combined').nodes.find(node => node.id === 'component:api')?.position;
+    const before = graphElements(state(visualization)).nodes.find(node => node.id === 'component:api')?.position;
     visualization.agents.child = agent('child', 'root', false); visualization.projectMap?.components.push({ id: 'db', name: 'DB', type: 'database', paths: [], position: { x: 400, y: 200 } }); visualization.componentRuntime.db = { activeAgentIds: [], activeActivityTypes: [], recentlyTouchedFiles: [], pendingApprovalCount: 0 };
-    const after = graphElements(state(visualization), 'combined').nodes.find(node => node.id === 'component:api')?.position;
+    const after = graphElements(state(visualization)).nodes.find(node => node.id === 'component:api')?.position;
     expect(after).toEqual(before);
   });
 });
