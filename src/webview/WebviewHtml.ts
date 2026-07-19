@@ -6,12 +6,12 @@ export function webviewHtml(webview: vscode.Webview, extensionUri: vscode.Uri): 
   const style = webview.asWebviewUri(vscode.Uri.joinPath(extensionUri, 'media', 'index.css'));
   const csp = [
     `default-src 'none'`, `img-src ${webview.cspSource} https: data:`,
-    `style-src ${webview.cspSource}`, `script-src 'nonce-${nonce}'`
+    `style-src ${webview.cspSource}`, `script-src ${webview.cspSource} 'nonce-${nonce}'`
   ].join('; ');
   return `<!doctype html>
 <html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
 <meta http-equiv="Content-Security-Policy" content="${csp}"><link rel="stylesheet" href="${style.toString()}"><title>Codex Workspace</title></head>
-<body><div id="root"></div><script nonce="${nonce}" src="${script.toString()}"></script></body></html>`;
+<body><div id="root"></div><script type="module" nonce="${nonce}" src="${script.toString()}"></script></body></html>`;
 }
 
 function createNonce(): string {
