@@ -40,7 +40,7 @@ export function activate(context: vscode.ExtensionContext): void {
   context.subscriptions.push(vscode.commands.registerCommand('codexAgentMap.runVisualizationDemo', () => controller?.runDemo()));
   context.subscriptions.push(vscode.commands.registerCommand('codexAgentMap.stopVisualizationDemo', () => controller?.stopDemo()));
   context.subscriptions.push(vscode.commands.registerCommand('codexAgentMap.openVisualWorkspace', () => { panel?.show(); controller?.showView('combined'); }));
-  context.subscriptions.push(vscode.commands.registerCommand('codexAgentMap.editProjectMap', () => { panel?.show(); controller?.showView('project'); }));
+  context.subscriptions.push(vscode.commands.registerCommand('codexAgentMap.editProjectMap', () => { panel?.show(); void controller?.handle({ type: 'editProjectMap' }); }));
   context.subscriptions.push(vscode.commands.registerCommand('codexAgentMap.saveProjectLayout', () => controller?.showView('project')));
   context.subscriptions.push(vscode.commands.registerCommand('codexAgentMap.autoLayoutProject', () => controller?.showView('project')));
   context.subscriptions.push(vscode.commands.registerCommand('codexAgentMap.resetAgentLayout', () => controller?.showView('agents')));

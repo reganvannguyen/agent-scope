@@ -26,6 +26,7 @@ export type WebviewMessage =
   | { type: 'selectGraphEntity'; kind: 'agent' | 'component'; id: string }
   | { type: 'clearGraphSelection' }
   | { type: 'initializeProjectMap' }
+  | { type: 'editProjectMap' }
   | { type: 'scanProjectMap' }
   | { type: 'saveProjectMap'; map: unknown }
   | { type: 'fitGraph' }
@@ -34,7 +35,7 @@ export type WebviewMessage =
 
 export function parseWebviewMessage(value: unknown): WebviewMessage | undefined {
   if (!isRecord(value) || typeof value.type !== 'string') return undefined;
-  if (['ready', 'startConnection', 'restartConnection', 'beginLogin', 'startThread', 'refreshThreads', 'loadMoreThreads', 'interruptTurn', 'openOutputChannel', 'clearGraphSelection', 'initializeProjectMap', 'scanProjectMap', 'fitGraph', 'runVisualizationDemo', 'stopVisualizationDemo'].includes(value.type)) {
+  if (['ready', 'startConnection', 'restartConnection', 'beginLogin', 'startThread', 'refreshThreads', 'loadMoreThreads', 'interruptTurn', 'openOutputChannel', 'clearGraphSelection', 'initializeProjectMap', 'editProjectMap', 'scanProjectMap', 'fitGraph', 'runVisualizationDemo', 'stopVisualizationDemo'].includes(value.type)) {
     return { type: value.type } as WebviewMessage;
   }
   if ((value.type === 'previewThread' || value.type === 'resumeThread') && typeof value.threadId === 'string') {

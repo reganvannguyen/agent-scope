@@ -1,3 +1,6 @@
 import type { ViewMode } from '../../types';
 import { post } from '../../vscode';
-export function ViewModeTabs({ selected }: { selected: ViewMode }): React.JSX.Element { return <nav className="view-tabs" aria-label="Workspace view">{(['combined', 'chat'] as const).map(mode => <button className={mode === selected || (mode === 'combined' && selected !== 'chat') ? 'selected' : ''} aria-pressed={mode === selected || (mode === 'combined' && selected !== 'chat')} key={mode} onClick={() => post({ type: 'selectViewMode', mode })}>{mode === 'combined' ? 'Map + Chat' : 'Chat'}</button>)}</nav>; }
+export function ViewModeTabs({ selected }: { selected: ViewMode }): React.JSX.Element {
+  const modes = [{ mode: 'combined' as const, label: 'Map + Chat' }, { mode: 'agents' as const, label: 'Map' }, { mode: 'chat' as const, label: 'Chat' }];
+  return <nav className="view-tabs" aria-label="Workspace view">{modes.map(item => <button className={item.mode === selected ? 'selected' : ''} aria-pressed={item.mode === selected} key={item.mode} onClick={() => post({ type: 'selectViewMode', mode: item.mode })}>{item.label}</button>)}</nav>;
+}
