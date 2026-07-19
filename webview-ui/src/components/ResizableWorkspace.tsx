@@ -45,7 +45,7 @@ export function ResizableWorkspace({ state }: { state: State }): React.JSX.Eleme
   };
   const columns = state.sidebarCollapsed ? '40px 0 minmax(0, 1fr)' : `${String(width)}px 5px minmax(0, 1fr)`;
   return <div ref={container} className={`workspace ${state.sidebarCollapsed ? 'sidebar-collapsed' : ''}`} style={{ gridTemplateColumns: columns }}>
-    <ThreadList threads={state.threads} selectedId={state.selectedThread?.id} hasMore={state.nextThreadCursor !== null} collapsed={state.sidebarCollapsed} />
+    <ThreadList threads={state.threads} currentWorkspace={state.workspaceCwd} selectedId={state.selectedThread?.id} hasMore={state.nextThreadCursor !== null} collapsed={state.sidebarCollapsed} />
     <div className="panel-divider" role="separator" aria-label="Resize Recent Threads panel" aria-orientation="vertical" aria-valuemin={minimum} aria-valuemax={maximum} aria-valuenow={Math.round(width)} tabIndex={state.sidebarCollapsed ? -1 : 0}
       onPointerDown={event => { if (state.sidebarCollapsed) return; event.preventDefault(); dragging.current = true; document.body.classList.add('resizing-panels'); }}
       onKeyDown={event => { if (event.key === 'ArrowLeft') { event.preventDefault(); resizeBy(-10); } else if (event.key === 'ArrowRight') { event.preventDefault(); resizeBy(10); } }}><span /></div>

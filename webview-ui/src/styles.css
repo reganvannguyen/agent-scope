@@ -10,3 +10,5 @@
 .app-shell { display: flex; flex-direction: column; overflow: hidden; }
 .app-header, .banner, .composer { flex: none; }
 .workspace { flex: 1 1 auto; }
+.workspace-heading { position: sticky; top: 74px; z-index: 1; margin: 8px 0 5px; padding: 5px 2px; overflow: hidden; color: var(--vscode-descriptionForeground); background: var(--vscode-editor-background); font-size: 11px; text-overflow: ellipsis; text-transform: uppercase; white-space: nowrap; }
+.resume-thread { display: flex; justify-content: center; padding: 16px 0 4px; }

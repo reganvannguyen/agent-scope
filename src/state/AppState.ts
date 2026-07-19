@@ -42,6 +42,7 @@ export interface ThreadDetail extends ThreadSummary {
 
 export interface AppState {
   connection: ConnectionState;
+  workspaceCwd?: string;
   account?: AccountState;
   models: ModelOption[];
   modes: CollaborationModeOption[];

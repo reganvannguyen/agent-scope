@@ -49,6 +49,7 @@ export class WorkspaceController implements vscode.Disposable {
     this.persistence = new SessionPersistence(context.workspaceState);
     const storedMode = context.workspaceState.get<unknown>(pref.mode);
     this.store.update({
+      ...(this.cwd === undefined ? {} : { workspaceCwd: this.cwd }),
       draft: stringPreference(context, pref.draft),
       sidebarCollapsed: context.workspaceState.get<boolean>(pref.collapsed, false),
       sidebarWidth: boundedSidebarWidth(context.workspaceState.get<unknown>(pref.sidebarWidth)),

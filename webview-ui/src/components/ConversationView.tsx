@@ -11,14 +11,12 @@ export function ConversationView({ thread }: { thread?: Thread }): React.JSX.Ele
   }, [thread?.id]);
   if (!thread) return <section className="empty"><h2>Start a Codex conversation</h2><p>Create a new thread or select a recent one.</p><button onClick={() => post({ type: 'startThread' })}>New thread</button></section>;
   return <section className="conversation" aria-label="Conversation" aria-live="polite">
-    <header className="thread-header"><div><h2>{thread.title}</h2><small>{thread.cwd}</small></div>
-      {!thread.resumed ? <button onClick={() => post({ type: 'resumeThread', threadId: thread.id })}>Resume thread</button> : <span className="badge">Resumed</span>}
-    </header>
+    <header className="thread-header"><div><h2>{thread.title}</h2><small>{thread.cwd}</small></div>{thread.resumed ? <span className="badge">Resumed</span> : null}</header>
     <div className="turns">{(thread.turns ?? []).map(turn => <article className="turn" key={turn.id}>
       {turn.items.map(item => <ConversationItem item={item} key={item.id} />)}
       {turn.error ? <div className="error-card">{turn.error}</div> : null}
       <div className="turn-status">{turn.status}</div>
-    </article>)}<div ref={end} className="conversation-end" /></div>
+    </article>)}{!thread.resumed ? <div className="resume-thread"><button onClick={() => post({ type: 'resumeThread', threadId: thread.id })}>Resume thread</button></div> : null}<div ref={end} className="conversation-end" /></div>
   </section>;
 }
 

@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Group recent threads by workspace, prioritize the open project, sort each group by recent activity, and place Resume Thread at the end of the conversation.
+
 - Complete Stage 1 root-agent Codex client.
 - Add owned App Server lifecycle, JSON-line transport, initialization, recovery, and sanitized logging.
 - Add ChatGPT account/login, dynamic models, reasoning efforts, and collaboration modes.

@@ -12,10 +12,10 @@ function mockClient(handler: (method: string, params: unknown) => unknown): RpcC
 }
 
 describe('ThreadService', () => {
-  it('lists workspace threads with pagination', async () => {
+  it('lists threads across workspaces with pagination', async () => {
     const client = mockClient((method, params) => {
       expect(method).toBe('thread/list');
-      expect(params).toMatchObject({ cwd: 'C:/repo', sortDirection: 'desc' });
+      expect(params).toMatchObject({ cwd: null, sortDirection: 'desc' });
       return { data: [baseThread], nextCursor: 'next', backwardsCursor: null };
     });
     await expect(new ThreadService(client, 'C:/repo').list()).resolves.toEqual({

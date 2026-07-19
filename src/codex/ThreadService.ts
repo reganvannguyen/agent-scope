@@ -10,7 +10,7 @@ export class ThreadService {
 
   public async list(cursor: string | null = null): Promise<ThreadPage> {
     const raw = await this.client.request<unknown>('thread/list', {
-      cursor, cwd: this.cwd ?? null, sortKey: 'updated_at', sortDirection: 'desc', archived: false
+      cursor, cwd: null, sortKey: 'updated_at', sortDirection: 'desc', archived: false
     });
     if (!isRecord(raw) || !Array.isArray(raw.data) || (raw.nextCursor !== null && typeof raw.nextCursor !== 'string')) {
       throw new Error('Invalid thread/list response');

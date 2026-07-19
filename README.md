@@ -53,7 +53,7 @@ Opening the workspace starts one App Server process in the selected workspace di
 
 ### Start or resume a thread
 
-Select **New thread**, type a prompt, and select **Send**. Recent threads for the current workspace appear in the collapsible sidebar. Selecting a stored thread previews its complete history without taking control; select **Resume thread** before sending a follow-up.
+Select **New thread**, type a prompt, and select **Send**. Recent threads are grouped by workspace, with the current VS Code workspace first and the newest threads first inside each group. Selecting a stored thread previews its complete history without taking control; use **Resume thread** at the end of the conversation before sending a follow-up.
 
 A warning appears before resuming a thread whose runtime status is active:
 

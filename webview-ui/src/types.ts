@@ -6,7 +6,7 @@ export interface Turn { id: string; status: string; items: Item[]; error?: strin
 export interface Thread { id: string; title: string; preview: string; cwd: string; status: string; updatedAt: number; turns?: Turn[]; resumed?: boolean; localOnly?: boolean; model?: string; effort?: string; }
 export interface PendingRequest { id: string | number; kind: 'command' | 'fileChange' | 'permissions' | 'userInput'; method: string; threadId: string; turnId: string; itemId: string; payload: Record<string, unknown>; state: string; }
 export interface State {
-  connection: string; account?: AccountState; models: Model[]; modes: Mode[];
+  connection: string; workspaceCwd?: string; account?: AccountState; models: Model[]; modes: Mode[];
   selection?: { modelId: string; effort: string }; selectedMode: 'default' | 'plan';
   threads: Thread[]; nextThreadCursor: string | null; selectedThread?: Thread;
   draft: string; sidebarCollapsed: boolean; sidebarWidth: number; composerHeight: number; pendingRequests: PendingRequest[]; stopping: boolean;
