@@ -1,8 +1,8 @@
 # Codex Agent Map
 
-Codex Agent Map is a VS Code extension that provides a complete root-agent Codex conversation client in an editor tab. Stage 1 focuses on reliable Codex conversations; visual agent hierarchy and project architecture mapping are planned for Stage 2.
+Codex Agent Map is a VS Code extension that combines a complete root-agent Codex conversation client with a live agent hierarchy and a stable, user-confirmed project architecture map.
 
-## Stage 1 features
+## Stage 1 conversation features
 
 - Owns one `codex app-server` process for the extension-host lifetime.
 - Detects and verifies the configured Codex executable.
@@ -17,6 +17,25 @@ Codex Agent Map is a VS Code extension that provides a complete root-agent Codex
 - Persists lightweight UI preferences while leaving conversation persistence to Codex.
 
 This extension is its own Codex client. It does not modify or depend on private APIs from OpenAI's official Codex extension, and it does not live-sync with a currently active turn in that extension.
+
+## Stage 2 visual workspace
+
+Stage 2 adds Combined, Agents, Project, and Chat views without replacing Stage 1. Combined keeps the execution map and main-agent conversation together; the focused views dedicate the editor to the hierarchy, architecture, or complete Stage 1 chat.
+
+The selected root thread remains visible as **Main Agent** while idle. Successful turns return it to Idle. Runtime subagents appear under their immediate parent with task, role, status, activity, duration, files, tools, and errors. They are inspection-only: users communicate only with the main agent, and subagents never receive a composer.
+
+Project components stay fixed during live work. Architecture edges are persistent and calm; agent-to-project edges are dynamic. Confirmed edges use direct file/tool/host evidence. Inferred edges use command CWDs, paths, test detection, or configured command patterns and are visibly dashed. Completed work becomes a recent trail and expires according to settings.
+
+```mermaid
+flowchart TD
+    A[Codex App Server] --> B[Extension-host Event Router]
+    B --> C[Conversation State]
+    B --> D[Agent State]
+    B --> E[Project Activity State]
+    C --> F[Combined Visualization]
+    D --> F
+    E --> F
+```
 
 ## Requirements
 
@@ -44,6 +63,54 @@ npm run build
 ```
 
 Open this repository in VS Code and press F5. The included launch configuration builds the extension and opens an Extension Development Host. In that host, run **Codex Agent Map: Open Workspace** from the Command Palette.
+
+### Initialize a project map
+
+Run **Codex Agent Map: Initialize Project Map** or open Project view. Choose **Scan Project** for bounded deterministic suggestions or **Create Manually**. The scanner reads common manifests and directory names locally; it never sends scan data to a model or automatically writes suggestions. Review, accept/reject, rename, change types and paths, add components and architecture edges, then choose **Confirm and Save**.
+
+Maps use schema version 1 and default to `.codex-agent-map/project-map.json`. A JSON Schema is available at `schemas/project-map.schema.json`. Invalid external edits retain the last valid in-memory map and report validation errors.
+
+```json
+{
+  "schemaVersion": 1,
+  "project": { "name": "Example" },
+  "components": [
+    { "id": "app", "name": "App", "type": "frontend", "paths": ["src/**"], "position": { "x": 100, "y": 100 } }
+  ],
+  "edges": []
+}
+```
+
+Supported types include frontend, backend, service, MCP, database, cache, queue, storage, external, tests, shared, infrastructure, and other. Components may also define command, tool, app, and domain matchers.
+
+### Run a multi-agent visualization
+
+Select or start a root thread and ask the main agent to delegate bounded tasks. For example: “Inspect this repository using three read-only subagents for frontend, backend, and tests; wait for all and summarize.” Collaboration events create children immediately; paginated descendant reconciliation recovers missed metadata. If the experimental filter is unsupported, the root visualization and live collaboration events continue with an honest recovery warning.
+
+### Demo Mode
+
+Run **Codex Agent Map: Run Visualization Demo** or select **Run Demo**. Demo Mode does not call Codex or consume usage. It exercises the production reducers with agents, architecture, confirmed and inferred connections, approvals, completion, and failure. **Stop Demo** restores untouched live visualization state.
+
+### Commands
+
+- Open Visual Workspace
+- Initialize Project Map
+- Scan Project Architecture
+- Edit Project Map
+- Save Project Layout and Auto Layout Project
+- Reset Agent Layout and Fit Visualization
+- Run/Stop Visualization Demo
+- Show Unmapped Activity
+
+### Stage 2 settings
+
+- `codexAgentMap.descendantPollIntervalMs` — active reconciliation interval, default 1500 ms.
+- `codexAgentMap.activityTrailDurationSeconds` — recent-trail lifetime, default 120 seconds; zero disables trails.
+- `codexAgentMap.showInferredActivityEdges` — show labelled inferred activity.
+- `codexAgentMap.maxRecentComponentConnectionsPerAgent` — bounded recent connections, default 5.
+- `codexAgentMap.completedAgentDisplay` — `show`, `collapse`, or `activeOnly`.
+- `codexAgentMap.autoFitOnNewAgent` — fit when a new agent appears.
+- `codexAgentMap.projectMapPath` — validated workspace-relative map path.
 
 ## Using the client
 
@@ -75,9 +142,9 @@ Approval cards show the associated command, file change, permissions, or tool qu
 
 ## Privacy and persistence
 
-Codex is the authoritative conversation store. The extension persists only lightweight workspace/UI state such as the last thread ID, selected model and effort, mode, sidebar preference, and unsent draft.
+Codex is the authoritative conversation store. The extension persists only lightweight workspace/UI state and user-confirmed architecture data. Runtime activity is not written into the project map.
 
-It does not persist full prompts, agent responses, raw command output, diffs, tokens, environment variables, approval payloads, or hidden reasoning. Raw hidden reasoning is never displayed; only server-provided reasoning summaries may be shown. Logs omit full prompts and responses.
+It does not persist full prompts, agent responses, raw command output, diffs, tokens, credentials, environment-variable values, approval payloads, complete sensitive URLs, or hidden reasoning. Raw hidden reasoning is never displayed; only server-provided summaries may be shown. Architecture scanning remains local and is never sent to another service.
 
 ## Security
 
@@ -112,16 +179,18 @@ PowerShell can resolve an npm `codex.ps1` while Node resolves a later `codex.exe
 
 ## Known limitations
 
-- Image and generic file attachments, mentions, and a skill picker are not part of Stage 1.
-- Subagent visualization, custom-agent delegation, and project mapping are not part of Stage 1.
+- Architecture detection is heuristic and always requires confirmation.
+- Runtime subagents are inspection-only; direct messaging and conversation forking are not implemented.
+- Custom-agent definitions, `.codex/agents/*.toml`, skills, and `AGENTS.md` visualization are deliberately outside Stage 2.
+- Image and generic file attachments, mentions, and a skill picker are not implemented.
 - Conversation forking and non-Codex providers are not implemented.
 - Command output and diffs are bounded previews, not a terminal emulator or full diff editor.
 - The client cannot take over or live-synchronize a turn currently controlled by another client.
 - Collaboration modes depend on the installed App Server's experimental API.
 
-## Stage 2 roadmap
+## Roadmap
 
-Stage 2 will build on the Stage 1 state/event boundaries to add agent hierarchy visualization and a stable project architecture map, without replacing the root-agent client.
+Stage 3 will add custom-agent definition visualization and controlled delegation. Stage 4 may add richer instruction, skill, and execution-context views. Hidden reasoning will remain excluded.
 
 ## Protocol references
 

@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+- Add the Stage 2 Combined, Agents, Project, and Chat visual workspace.
+- Add persistent main-agent and runtime-subagent hierarchy state, collaboration discovery, descendant reconciliation, statuses, activity, and inspection details.
+- Add versioned project maps, deterministic local scanning, review/edit/save workflow, atomic persistence, validation, and watching.
+- Add confirmed and inferred matching for file, command, test, tool, app, and external-host activity.
+- Add stable React Flow/Dagre graphs, architecture/delegation/activity edges, recent trails, component aggregation, completed-agent modes, and accessible controls.
+- Add isolated reducer-driven Demo Mode, resilience and performance safeguards, Stage 2 commands/settings, tests, and documentation.
+
 - Group recent threads by workspace, prioritize the open project, sort each group by recent activity, and place Resume Thread at the end of the conversation.
 
 - Complete Stage 1 root-agent Codex client.
