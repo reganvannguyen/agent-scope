@@ -10,3 +10,4 @@
 - Add a secure responsive editor-tab Webview with sanitized Markdown and accessible controls.
 - Add strict TypeScript validation and unit/integration coverage for protocol, state, services, controls, and Webview boundaries.
 - Fall back to the Codex executable bundled with the official OpenAI VS Code extension when `codex` is absent from the Extension Host's `PATH`.
+- Add a draggable, keyboard-accessible divider that resizes and persists the Recent Threads panel width.

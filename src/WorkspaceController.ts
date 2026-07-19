@@ -18,6 +18,7 @@ import { resolveWorkspacePath } from './webview/WorkspacePath';
 
 const pref = {
   draft: 'codexAgentMap.draft', collapsed: 'codexAgentMap.sidebarCollapsed',
+  sidebarWidth: 'codexAgentMap.sidebarWidth',
   model: 'codexAgentMap.model', effort: 'codexAgentMap.effort', mode: 'codexAgentMap.mode'
 };
 
@@ -49,6 +50,7 @@ export class WorkspaceController implements vscode.Disposable {
     this.store.update({
       draft: stringPreference(context, pref.draft),
       sidebarCollapsed: context.workspaceState.get<boolean>(pref.collapsed, false),
+      sidebarWidth: boundedSidebarWidth(context.workspaceState.get<unknown>(pref.sidebarWidth)),
       selectedMode: storedMode === 'plan' ? 'plan' : 'default'
     });
     client.on('state', this.onState);
@@ -89,6 +91,7 @@ export class WorkspaceController implements vscode.Disposable {
         case 'resolveServerRequest': this.approvals.resolve(message.requestId, message.answer); this.syncApprovals(); return;
         case 'setDraft': this.store.update({ draft: message.text }); await this.context.workspaceState.update(pref.draft, message.text); return;
         case 'setSidebarCollapsed': this.store.update({ sidebarCollapsed: message.collapsed }); await this.context.workspaceState.update(pref.collapsed, message.collapsed); return;
+        case 'setSidebarWidth': this.store.update({ sidebarWidth: message.width }); await this.context.workspaceState.update(pref.sidebarWidth, message.width); return;
         case 'openFile': await this.openFile(message.path); return;
         case 'openOutputChannel': this.output.show(true); return;
       }
@@ -268,3 +271,4 @@ function stringPreference(context: vscode.ExtensionContext, key: string): string
 }
 function dedupe<T extends { id: string }>(items: T[]): T[] { return [...new Map(items.map(item => [item.id, item])).values()]; }
 function userError(detail: string): string { return detail === 'ACTIVE_THREAD_CONFIRMATION_REQUIRED' ? 'Confirm before resuming a thread that may be active elsewhere.' : detail; }
+function boundedSidebarWidth(value: unknown): number { return typeof value === 'number' && Number.isFinite(value) ? Math.min(480, Math.max(160, Math.round(value))) : 250; }

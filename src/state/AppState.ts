@@ -51,6 +51,7 @@ export interface AppState {
   selectedThread?: ThreadDetail;
   draft: string;
   sidebarCollapsed: boolean;
+  sidebarWidth: number;
   pendingRequests: PendingServerRequest[];
   stopping: boolean;
   error?: string;
@@ -60,6 +61,6 @@ export interface AppState {
 export function initialAppState(): AppState {
   return {
     connection: 'stopped', models: [], modes: [], selectedMode: 'default', threads: [], nextThreadCursor: null,
-    draft: '', sidebarCollapsed: false, pendingRequests: [], stopping: false
+    draft: '', sidebarCollapsed: false, sidebarWidth: 250, pendingRequests: [], stopping: false
   };
 }

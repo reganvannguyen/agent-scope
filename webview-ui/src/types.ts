@@ -9,7 +9,7 @@ export interface State {
   connection: string; account?: AccountState; models: Model[]; modes: Mode[];
   selection?: { modelId: string; effort: string }; selectedMode: 'default' | 'plan';
   threads: Thread[]; nextThreadCursor: string | null; selectedThread?: Thread;
-  draft: string; sidebarCollapsed: boolean; pendingRequests: PendingRequest[]; stopping: boolean;
+  draft: string; sidebarCollapsed: boolean; sidebarWidth: number; pendingRequests: PendingRequest[]; stopping: boolean;
   error?: string; warning?: string;
 }
-export const emptyState: State = { connection: 'stopped', models: [], modes: [], selectedMode: 'default', threads: [], nextThreadCursor: null, draft: '', sidebarCollapsed: false, pendingRequests: [], stopping: false };
+export const emptyState: State = { connection: 'stopped', models: [], modes: [], selectedMode: 'default', threads: [], nextThreadCursor: null, draft: '', sidebarCollapsed: false, sidebarWidth: 250, pendingRequests: [], stopping: false };
