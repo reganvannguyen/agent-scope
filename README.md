@@ -31,7 +31,7 @@ Install Codex CLI if it is not already available, then verify it:
 codex --version
 ```
 
-By default, the extension launches `codex app-server`. Set `codexAgentMap.codexPath` to an explicit executable when more than one Codex installation is on `PATH` or when detection fails. The extension uses Node's `shell: false` executable resolution, which can differ from PowerShell alias resolution on Windows.
+By default, the extension first tries `codex` on the Extension Host's `PATH`. If that is unavailable, it automatically searches the official OpenAI extension folders for the bundled platform-specific Codex executable. Set `codexAgentMap.codexPath` to an explicit executable when more than one installation exists or exact version selection matters.
 
 ## Development
 
@@ -92,7 +92,7 @@ It does not persist full prompts, agent responses, raw command output, diffs, to
 
 ### Codex executable not found
 
-Run **Codex Agent Map: Choose Codex Executable**, select the desired binary, and reconnect. Check **Codex Agent Map** in the Output panel for sanitized details.
+The extension automatically falls back to the Codex executable bundled with an installed official OpenAI VS Code extension. If neither `PATH` nor that fallback works, run **Codex Agent Map: Choose Codex Executable**, select the desired binary, and reconnect. Check **Codex Agent Map** in the Output panel for sanitized details.
 
 ### Connected but signed out
 

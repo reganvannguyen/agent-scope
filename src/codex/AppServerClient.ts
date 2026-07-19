@@ -1,7 +1,7 @@
 import { EventEmitter } from 'node:events';
 import type { OutputChannel } from 'vscode';
 import { AppServerProcess, type ProcessExit } from './AppServerProcess';
-import { detectCodexExecutable } from './CodexExecutable';
+import { resolveCodexExecutable } from './CodexExecutable';
 import { JsonLineTransport } from './JsonLineTransport';
 import { initializeAppServer } from './Initialization';
 import type { ConnectionState, ServerRequest } from './ProtocolTypes';
@@ -27,9 +27,9 @@ export class AppServerClient extends EventEmitter {
     if (this.state !== 'stopped' && this.state !== 'failed') return;
     this.stopping = false;
     this.setState('starting');
-    const info = await detectCodexExecutable(executable);
-    this.output.appendLine(`Using ${info.version}`);
-    const child = this.process.start(executable, cwd);
+    const info = await resolveCodexExecutable(executable);
+    this.output.appendLine(`Using ${info.version} from ${info.path}`);
+    const child = this.process.start(info.path, cwd);
     const transport = new JsonLineTransport(child.stdin);
     this.transport = transport;
     transport.setHandlers({

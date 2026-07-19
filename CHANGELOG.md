@@ -9,3 +9,4 @@
 - Add steering, interruption, approvals, permission requests, and tool user input.
 - Add a secure responsive editor-tab Webview with sanitized Markdown and accessible controls.
 - Add strict TypeScript validation and unit/integration coverage for protocol, state, services, controls, and Webview boundaries.
+- Fall back to the Codex executable bundled with the official OpenAI VS Code extension when `codex` is absent from the Extension Host's `PATH`.
