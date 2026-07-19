@@ -38,4 +38,26 @@ describe('TurnService', () => {
     await expect(service.start('thread-1', 'hello')).rejects.toThrow('send failed');
     expect(service.activeId).toBeUndefined();
   });
+
+  it('steers the active turn without changing its ID', async () => {
+    const request = vi.fn((method: string) => Promise.resolve(method === 'turn/start' ? turnResponse : { turnId: 'turn-1' }));
+    const service = new TurnService({ request: request as RpcClient['request'] });
+    await service.start('thread-1', 'hello');
+    await expect(service.steer('thread-1', ' backend first ')).resolves.toBe('turn-1');
+    expect(request).toHaveBeenLastCalledWith('turn/steer', {
+      threadId: 'thread-1', expectedTurnId: 'turn-1', input: [{ type: 'text', text: 'backend first', text_elements: [] }]
+    });
+  });
+
+  it('waits for authoritative completion after interruption and prevents duplicate clicks', async () => {
+    const request = vi.fn((method: string) => Promise.resolve(method === 'turn/start' ? turnResponse : {}));
+    const service = new TurnService({ request: request as RpcClient['request'] });
+    await service.start('thread-1', 'hello');
+    await service.interrupt('thread-1');
+    expect(service.activeId).toBe('turn-1');
+    expect(service.isStopping).toBe(true);
+    await expect(service.interrupt('thread-1')).rejects.toThrow('already in progress');
+    service.complete('turn-1');
+    expect(service.activeId).toBeUndefined();
+  });
 });
