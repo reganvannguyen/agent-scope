@@ -1,0 +1,9 @@
+.git/**
+.github/**
+.protocol-reference/**
+instructions/**
+src/**
+webview-ui/src/**
+node_modules/.cache/**
+**/*.map
+**/*.test.*

@@ -1,0 +1,77 @@
+{
+  "name": "codex-agent-map",
+  "displayName": "Codex Agent Map",
+  "description": "A first-party-style Codex App Server client for VS Code.",
+  "version": "0.1.0",
+  "publisher": "reganvannguyen",
+  "license": "MIT",
+  "engines": {
+    "vscode": "^1.96.0"
+  },
+  "categories": ["Other"],
+  "activationEvents": ["onCommand:codexAgentMap.openWorkspace"],
+  "main": "./dist/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "codexAgentMap.openWorkspace",
+        "title": "Codex Agent Map: Open Workspace"
+      },
+      {
+        "command": "codexAgentMap.chooseCodexPath",
+        "title": "Codex Agent Map: Choose Codex Executable"
+      },
+      {
+        "command": "codexAgentMap.signIn",
+        "title": "Codex Agent Map: Sign in with ChatGPT"
+      }
+    ],
+    "configuration": {
+      "title": "Codex Agent Map",
+      "properties": {
+        "codexAgentMap.codexPath": {
+          "type": "string",
+          "default": "codex",
+          "description": "Path to the Codex CLI executable."
+        },
+        "codexAgentMap.debugLogging": {
+          "type": "boolean",
+          "default": false,
+          "description": "Log sanitized unknown protocol events."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "clean": "node scripts/clean.mjs",
+    "compile": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p webview-ui/tsconfig.json --noEmit",
+    "lint": "eslint src webview-ui/src --max-warnings=0",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "build:webview": "vite build --config webview-ui/vite.config.ts",
+    "build": "npm run clean && npm run compile && npm run build:webview",
+    "vscode:prepublish": "npm run build"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.17.0",
+    "@types/node": "^22.10.2",
+    "@types/react": "^19.0.3",
+    "@types/react-dom": "^19.0.2",
+    "@types/vscode": "^1.96.0",
+    "@vitejs/plugin-react": "^4.3.4",
+    "eslint": "^9.17.0",
+    "eslint-plugin-react-hooks": "^5.1.0",
+    "eslint-plugin-react-refresh": "^0.4.16",
+    "typescript": "^5.7.2",
+    "typescript-eslint": "^8.18.1",
+    "vite": "^6.0.5",
+    "vitest": "^4.1.10"
+  },
+  "dependencies": {
+    "dompurify": "^3.2.3",
+    "marked": "^15.0.4",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  }
+}
