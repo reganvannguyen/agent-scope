@@ -26,6 +26,7 @@ export type WebviewMessage =
   | { type: 'selectGraphEntity'; kind: 'agent' | 'component'; id: string }
   | { type: 'initializeProjectMap' }
   | { type: 'scanProjectMap' }
+  | { type: 'saveProjectMap'; map: unknown }
   | { type: 'fitGraph' };
 
 export function parseWebviewMessage(value: unknown): WebviewMessage | undefined {
@@ -49,5 +50,6 @@ export function parseWebviewMessage(value: unknown): WebviewMessage | undefined 
   if (value.type === 'openFile' && typeof value.path === 'string') return { type: value.type, path: value.path };
   if (value.type === 'selectViewMode' && (value.mode === 'combined' || value.mode === 'agents' || value.mode === 'project' || value.mode === 'chat')) return { type: value.type, mode: value.mode };
   if (value.type === 'selectGraphEntity' && (value.kind === 'agent' || value.kind === 'component') && typeof value.id === 'string' && value.id.trim() !== '') return { type: value.type, kind: value.kind, id: value.id };
+  if (value.type === 'saveProjectMap' && isRecord(value.map)) return { type: value.type, map: value.map };
   return undefined;
 }

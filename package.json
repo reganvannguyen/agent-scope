@@ -42,7 +42,14 @@
           "type": "boolean",
           "default": false,
           "description": "Log sanitized unknown protocol events."
-        }
+        },
+        "codexAgentMap.descendantPollIntervalMs": { "type": "number", "default": 1500, "minimum": 500, "maximum": 10000, "description": "Active descendant reconciliation interval." },
+        "codexAgentMap.activityTrailDurationSeconds": { "type": "number", "default": 120, "minimum": 0, "maximum": 3600, "description": "How long completed activity connections remain visible." },
+        "codexAgentMap.showInferredActivityEdges": { "type": "boolean", "default": true, "description": "Show evidence-based inferred activity edges." },
+        "codexAgentMap.maxRecentComponentConnectionsPerAgent": { "type": "number", "default": 5, "minimum": 0, "maximum": 50, "description": "Maximum recent component trails retained for each agent." },
+        "codexAgentMap.completedAgentDisplay": { "type": "string", "enum": ["show", "collapse", "activeOnly"], "default": "collapse", "description": "How completed runtime subagents are displayed." },
+        "codexAgentMap.autoFitOnNewAgent": { "type": "boolean", "default": true, "description": "Fit the visualization when a new agent appears." },
+        "codexAgentMap.projectMapPath": { "type": "string", "default": ".codex-agent-map/project-map.json", "description": "Workspace-relative project map configuration path." }
       }
     }
   },

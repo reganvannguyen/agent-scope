@@ -8,6 +8,7 @@ export interface PendingRequest { id: string | number; kind: 'command' | 'fileCh
 export type ViewMode = 'combined' | 'agents' | 'project' | 'chat';
 export interface RuntimeAgent { threadId: string; parentThreadId: string | null; displayName: string; role: string | null; delegatedTask: string | null; status: string; currentActivity: { label: string } | null; recentActivities: Array<{ label: string; status: string }>; activeSince: number | null; completedAt: number | null; error: string | null; isRoot: boolean; cwd: string | null; model: string | null; }
 export interface ProjectComponent { id: string; name: string; type: string; description?: string; paths: string[]; position: { x: number; y: number } }
+export interface ProjectSuggestion { id: string; name: string; type: string; paths: string[]; confidence: string; evidence: string[] }
 export interface ArchitectureEdge { id: string; source: string; target: string; type: string; label?: string }
 export interface ActivityConnection { id: string; agentThreadId: string; componentId: string; activityType: string; confidence: 'confirmed' | 'inferred'; state: 'current' | 'recent' }
 export interface Visualization { agents: Record<string, RuntimeAgent>; hierarchyEdges: Record<string, { id: string; parentThreadId: string; childThreadId: string }>; projectMap?: { project: { name: string }; components: ProjectComponent[]; edges: ArchitectureEdge[] }; connections: Record<string, ActivityConnection>; componentRuntime: Record<string, { activeAgentIds: string[]; activeActivityTypes: string[]; recentlyTouchedFiles: string[]; pendingApprovalCount: number }>; demo: boolean; }
@@ -17,6 +18,7 @@ export interface State {
   threads: Thread[]; nextThreadCursor: string | null; selectedThread?: Thread;
   draft: string; sidebarCollapsed: boolean; sidebarWidth: number; composerHeight: number; pendingRequests: PendingRequest[]; stopping: boolean;
   viewMode?: ViewMode; visualization?: Visualization; selectedGraphEntity?: { kind: 'agent' | 'component'; id: string };
+  projectSuggestions?: ProjectSuggestion[];
   error?: string; warning?: string;
 }
 export const emptyState: State = { connection: 'stopped', models: [], modes: [], selectedMode: 'default', threads: [], nextThreadCursor: null, draft: '', sidebarCollapsed: false, sidebarWidth: 250, composerHeight: 112, pendingRequests: [], stopping: false };

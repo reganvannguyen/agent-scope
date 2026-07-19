@@ -19,5 +19,7 @@ describe('parseWebviewMessage', () => {
     expect(parseWebviewMessage({ type: 'selectGraphEntity', kind: 'agent', id: 'thread-1' })).toEqual({ type: 'selectGraphEntity', kind: 'agent', id: 'thread-1' });
     expect(parseWebviewMessage({ type: 'selectViewMode', mode: 'unknown' })).toBeUndefined();
     expect(parseWebviewMessage({ type: 'selectGraphEntity', kind: 'component', id: '' })).toBeUndefined();
+    expect(parseWebviewMessage({ type: 'saveProjectMap', map: { schemaVersion: 1 } })).toBeDefined();
+    expect(parseWebviewMessage({ type: 'saveProjectMap', map: 'unsafe' })).toBeUndefined();
   });
 });

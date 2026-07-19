@@ -3,6 +3,8 @@ import type { CollaborationModeOption } from '../codex/CollaborationModeService'
 import type { ModelOption, ModelSelection } from '../codex/ModelService';
 import type { ConnectionState } from '../codex/ProtocolTypes';
 import type { PendingServerRequest } from '../codex/ApprovalService';
+import type { ArchitectureSuggestion } from '../project-map/ProjectMapScanner';
+import type { VisualizationSnapshot } from '../visualization/VisualizationCoordinator';
 
 export interface ConversationItem {
   id: string;
@@ -55,6 +57,10 @@ export interface AppState {
   sidebarCollapsed: boolean;
   sidebarWidth: number;
   composerHeight: number;
+  viewMode: 'combined' | 'agents' | 'project' | 'chat';
+  visualization?: VisualizationSnapshot;
+  selectedGraphEntity?: { kind: 'agent' | 'component'; id: string };
+  projectSuggestions: ArchitectureSuggestion[];
   pendingRequests: PendingServerRequest[];
   stopping: boolean;
   error?: string;
@@ -64,6 +70,6 @@ export interface AppState {
 export function initialAppState(): AppState {
   return {
     connection: 'stopped', models: [], modes: [], selectedMode: 'default', threads: [], nextThreadCursor: null,
-    draft: '', sidebarCollapsed: false, sidebarWidth: 250, composerHeight: 112, pendingRequests: [], stopping: false
+    draft: '', sidebarCollapsed: false, sidebarWidth: 250, composerHeight: 112, viewMode: 'combined', projectSuggestions: [], pendingRequests: [], stopping: false
   };
 }
