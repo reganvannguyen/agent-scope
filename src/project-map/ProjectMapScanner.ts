@@ -1,9 +1,10 @@
 import { readdir, readFile, stat } from 'node:fs/promises';
 import { basename, join, relative } from 'node:path';
-import type { ProjectComponentType } from './ProjectMapModels';
+import type { ArchitectureEdge, ProjectComponentType } from './ProjectMapModels';
 
 export interface ArchitectureSuggestion { id: string; name: string; type: ProjectComponentType; paths: string[]; confidence: 'high' | 'medium' | 'low'; evidence: string[] }
-export interface ProjectScanResult { suggestions: ArchitectureSuggestion[]; filesInspected: number; truncated: boolean }
+export interface ArchitectureEdgeSuggestion extends ArchitectureEdge { confidence: 'high' | 'medium' | 'low'; evidence: string[] }
+export interface ProjectScanResult { suggestions: ArchitectureSuggestion[]; edgeSuggestions: ArchitectureEdgeSuggestion[]; filesInspected: number; truncated: boolean }
 export interface ScanLimits { maxFiles: number; maxManifestBytes: number }
 
 const excluded = new Set(['.git', 'node_modules', '.venv', 'venv', 'dist', 'build', 'coverage', '.next', '.turbo', 'vendor', 'target']);
@@ -31,7 +32,8 @@ export class ProjectMapScanner {
     }
     const suggestions: ArchitectureSuggestion[] = [];
     detectPackages(content, suggestions); detectDirectories(directories, suggestions); detectCompose(content, suggestions);
-    return { suggestions: dedupeSuggestions(suggestions), filesInspected: files.length, truncated };
+    const deduped = dedupeSuggestions(suggestions);
+    return { suggestions: deduped, edgeSuggestions: suggestEdges(deduped), filesInspected: files.length, truncated };
   }
 }
 
@@ -66,3 +68,19 @@ function dedupeSuggestions(values: ArchitectureSuggestion[]): ArchitectureSugges
 function confidence(value: ArchitectureSuggestion['confidence']): number { return value === 'high' ? 3 : value === 'medium' ? 2 : 1; }
 function directoryGlob(file: string): string { const parts = normalize(file).split('/'); return parts.length === 1 ? '**' : `${parts.slice(0, -1).join('/')}/**`; }
 function normalize(value: string): string { return value.replace(/\\/gu, '/'); }
+
+export function suggestEdges(components: ReadonlyArray<Pick<ArchitectureSuggestion, 'id' | 'name' | 'type'>>): ArchitectureEdgeSuggestion[] {
+  const result: ArchitectureEdgeSuggestion[] = [];
+  const add = (source: Pick<ArchitectureSuggestion, 'id' | 'name'>, target: Pick<ArchitectureSuggestion, 'id' | 'name'>, type: string, label: string): void => {
+    if (source.id === target.id || result.some(edge => edge.source === source.id && edge.target === target.id && edge.type === type)) return;
+    result.push({ id: `${source.id}-${target.id}-${type}`, source: source.id, target: target.id, type, label, confidence: 'medium', evidence: [`${source.name} commonly connects to ${target.name}`] });
+  };
+  const typed = (types: ProjectComponentType[]) => components.filter(component => types.includes(component.type));
+  for (const frontend of typed(['frontend'])) for (const api of typed(['backend', 'service', 'mcp'])) add(frontend, api, 'request', 'API');
+  for (const api of typed(['backend', 'service', 'mcp'])) {
+    for (const data of typed(['database', 'storage', 'queue'])) add(api, data, 'data', 'Data');
+    for (const cache of typed(['cache'])) add(api, cache, 'cache', 'Cache');
+  }
+  for (const tests of typed(['tests'])) for (const target of components.filter(component => !['tests', 'infrastructure', 'external'].includes(component.type))) add(tests, target, 'test', 'Tests');
+  return result;
+}

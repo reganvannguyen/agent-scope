@@ -310,16 +310,16 @@ export class WorkspaceController implements vscode.Disposable {
     if (this.projectMap === undefined || this.cwd === undefined) throw new Error('No workspace is open');
     const name = vscode.workspace.name ?? this.cwd.split(/[\\/]/u).pop() ?? 'Project';
     const map = await this.projectMap.save({ schemaVersion: 1, project: { name }, components: [], edges: [] });
-    this.visualization.loadProjectMap(map); this.syncVisualization(); this.store.update({ viewMode: 'project', projectSuggestions: [] });
+    this.visualization.loadProjectMap(map); this.syncVisualization(); this.store.update({ viewMode: 'project', projectSuggestions: [], projectEdgeSuggestions: [] });
   }
   private async scanProjectMap(): Promise<void> {
     if (this.cwd === undefined) throw new Error('No workspace is open');
     const result = await new ProjectMapScanner(this.cwd).scan();
-    this.store.update({ projectSuggestions: result.suggestions, viewMode: 'project', warning: result.truncated ? 'Architecture scan reached its file limit. Review the partial suggestions before saving.' : '' });
+    this.store.update({ projectSuggestions: result.suggestions, projectEdgeSuggestions: result.edgeSuggestions, viewMode: 'project', warning: result.truncated ? 'Architecture scan reached its file limit. Review the partial suggestions before saving.' : '' });
   }
   private async saveProjectMap(value: unknown): Promise<void> {
     if (this.projectMap === undefined) throw new Error('No workspace is open');
-    const map = await this.projectMap.save(value); this.visualization.loadProjectMap(map); this.syncVisualization(); this.store.update({ projectSuggestions: [], warning: '' });
+    const map = await this.projectMap.save(value); this.visualization.loadProjectMap(map); this.syncVisualization(); this.store.update({ projectSuggestions: [], projectEdgeSuggestions: [], warning: '' });
   }
   private scheduleDescendantPoll(): void {
     if (this.descendantTimer !== undefined) clearTimeout(this.descendantTimer);

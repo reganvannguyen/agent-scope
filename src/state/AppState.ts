@@ -3,7 +3,7 @@ import type { CollaborationModeOption } from '../codex/CollaborationModeService'
 import type { ModelOption, ModelSelection } from '../codex/ModelService';
 import type { ConnectionState } from '../codex/ProtocolTypes';
 import type { PendingServerRequest } from '../codex/ApprovalService';
-import type { ArchitectureSuggestion } from '../project-map/ProjectMapScanner';
+import type { ArchitectureEdgeSuggestion, ArchitectureSuggestion } from '../project-map/ProjectMapScanner';
 import type { VisualizationSnapshot } from '../visualization/VisualizationCoordinator';
 
 export interface ConversationItem {
@@ -62,6 +62,7 @@ export interface AppState {
   visualization?: VisualizationSnapshot;
   selectedGraphEntity?: { kind: 'agent' | 'component'; id: string } | undefined;
   projectSuggestions: ArchitectureSuggestion[];
+  projectEdgeSuggestions: ArchitectureEdgeSuggestion[];
   pendingRequests: PendingServerRequest[];
   stopping: boolean;
   error?: string;
@@ -71,6 +72,6 @@ export interface AppState {
 export function initialAppState(): AppState {
   return {
     connection: 'stopped', models: [], modes: [], selectedMode: 'default', threads: [], nextThreadCursor: null,
-    draft: '', sidebarCollapsed: false, sidebarWidth: 250, composerHeight: 112, viewMode: 'combined', completedAgentDisplay: 'collapse', projectSuggestions: [], pendingRequests: [], stopping: false
+    draft: '', sidebarCollapsed: false, sidebarWidth: 250, composerHeight: 112, viewMode: 'combined', completedAgentDisplay: 'collapse', projectSuggestions: [], projectEdgeSuggestions: [], pendingRequests: [], stopping: false
   };
 }

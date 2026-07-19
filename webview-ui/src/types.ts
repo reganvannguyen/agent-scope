@@ -10,6 +10,7 @@ export interface RuntimeAgent { threadId: string; parentThreadId: string | null;
 export interface ProjectComponent { id: string; name: string; type: string; description?: string; paths: string[]; position: { x: number; y: number } }
 export interface ProjectSuggestion { id: string; name: string; type: string; paths: string[]; confidence: string; evidence: string[] }
 export interface ArchitectureEdge { id: string; source: string; target: string; type: string; label?: string }
+export interface ArchitectureEdgeSuggestion extends ArchitectureEdge { confidence: string; evidence: string[] }
 export interface ActivityConnection { id: string; agentThreadId: string; componentId: string; activityType: string; confidence: 'confirmed' | 'inferred'; state: 'current' | 'recent' }
 export interface Visualization { agents: Record<string, RuntimeAgent>; hierarchyEdges: Record<string, { id: string; parentThreadId: string; childThreadId: string }>; projectMap?: { project: { name: string }; components: ProjectComponent[]; edges: ArchitectureEdge[] }; connections: Record<string, ActivityConnection>; componentRuntime: Record<string, { activeAgentIds: string[]; activeActivityTypes: string[]; recentlyTouchedFiles: string[]; pendingApprovalCount: number }>; unmappedActivityCount: number; demo: boolean; }
 export interface State {
@@ -20,6 +21,7 @@ export interface State {
   viewMode?: ViewMode; visualization?: Visualization; selectedGraphEntity?: { kind: 'agent' | 'component'; id: string };
   completedAgentDisplay?: 'show' | 'collapse' | 'activeOnly';
   projectSuggestions?: ProjectSuggestion[];
+  projectEdgeSuggestions?: ArchitectureEdgeSuggestion[];
   error?: string; warning?: string;
 }
 export const emptyState: State = { connection: 'stopped', models: [], modes: [], selectedMode: 'default', threads: [], nextThreadCursor: null, draft: '', sidebarCollapsed: false, sidebarWidth: 250, composerHeight: 112, pendingRequests: [], stopping: false };

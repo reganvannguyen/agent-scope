@@ -4,7 +4,7 @@ import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { addComponent, addEdge, deleteComponent, mapFromSuggestions, reverseEdge, updateComponent } from './ProjectMapEditor';
 import type { ProjectComponent } from './ProjectMapModels';
-import { ProjectMapScanner } from './ProjectMapScanner';
+import { ProjectMapScanner, suggestEdges } from './ProjectMapScanner';
 
 describe('deterministic project scanner', () => {
   it('detects frontend, backend, database, Redis, MCP, tests, and infrastructure with evidence', async () => {
@@ -14,7 +14,21 @@ describe('deterministic project scanner', () => {
     const result = await new ProjectMapScanner(root).scan();
     expect(result.suggestions.map(item => item.type)).toEqual(expect.arrayContaining(['frontend', 'backend', 'database', 'cache', 'mcp', 'tests', 'infrastructure']));
     expect(result.suggestions.every(item => item.evidence.length > 0)).toBe(true);
+    expect(result.edgeSuggestions).toEqual(expect.arrayContaining([
+      expect.objectContaining({ source: 'frontend', target: 'backend', label: 'API' }),
+      expect.objectContaining({ source: 'backend', target: 'database', label: 'Data' }),
+      expect.objectContaining({ source: 'backend', target: 'redis', label: 'Cache' })
+    ]));
     expect(result.truncated).toBe(false);
+  });
+  it('does not duplicate or self-connect suggested architecture edges', () => {
+    const edges = suggestEdges([
+      { id: 'frontend', name: 'Web', type: 'frontend' },
+      { id: 'api', name: 'API', type: 'backend' },
+      { id: 'tests', name: 'Tests', type: 'tests' }
+    ]);
+    expect(edges.some(edge => edge.source === edge.target)).toBe(false);
+    expect(new Set(edges.map(edge => edge.id)).size).toBe(edges.length);
   });
   it('detects Compose services, excludes dependencies and environment files, and enforces limits', async () => {
     const root = await mkdtemp(join(tmpdir(), 'agent-map-scan-'));
