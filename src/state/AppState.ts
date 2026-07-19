@@ -2,6 +2,7 @@ import type { AccountState } from '../codex/AccountService';
 import type { CollaborationModeOption } from '../codex/CollaborationModeService';
 import type { ModelOption, ModelSelection } from '../codex/ModelService';
 import type { ConnectionState } from '../codex/ProtocolTypes';
+import type { PendingServerRequest } from '../codex/ApprovalService';
 
 export interface ConversationItem {
   id: string;
@@ -44,18 +45,21 @@ export interface AppState {
   models: ModelOption[];
   modes: CollaborationModeOption[];
   selection?: ModelSelection;
+  selectedMode: 'default' | 'plan';
   threads: ThreadSummary[];
   nextThreadCursor: string | null;
   selectedThread?: ThreadDetail;
   draft: string;
   sidebarCollapsed: boolean;
+  pendingRequests: PendingServerRequest[];
+  stopping: boolean;
   error?: string;
   warning?: string;
 }
 
 export function initialAppState(): AppState {
   return {
-    connection: 'stopped', models: [], modes: [], threads: [], nextThreadCursor: null,
-    draft: '', sidebarCollapsed: false
+    connection: 'stopped', models: [], modes: [], selectedMode: 'default', threads: [], nextThreadCursor: null,
+    draft: '', sidebarCollapsed: false, pendingRequests: [], stopping: false
   };
 }

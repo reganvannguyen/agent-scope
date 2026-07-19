@@ -48,8 +48,8 @@ export class AppServerClient extends EventEmitter {
       });
       this.setState('connected');
     } catch (error) {
-      this.setState('failed');
       await this.disconnect();
+      this.setState('failed');
       throw error;
     }
   }
@@ -62,8 +62,12 @@ export class AppServerClient extends EventEmitter {
   }
 
   public respond(request: ServerRequest, result: unknown): void {
+    this.respondId(request.id, result);
+  }
+
+  public respondId(id: ServerRequest['id'], result: unknown): void {
     if (this.transport === undefined) throw new Error('App Server is not connected');
-    this.transport.respond(request.id, result);
+    this.transport.respond(id, result);
   }
 
   public async disconnect(): Promise<void> {
@@ -82,6 +86,8 @@ export class AppServerClient extends EventEmitter {
   };
   private readonly onExit = (exit: ProcessExit): void => {
     this.transport?.rejectAll(new Error(`App Server exited with code ${String(exit.code)}`));
+    this.transport = undefined;
+    this.removeProcessListeners();
     if (!this.stopping) {
       this.output.appendLine(`App Server exited unexpectedly (code ${String(exit.code)})`);
       this.setState('failed');

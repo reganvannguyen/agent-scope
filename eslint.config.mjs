@@ -27,7 +27,8 @@ export default tseslint.config(
     },
     rules: {
       ...reactHooks.configs.recommended.rules,
-      ...reactRefresh.configs.vite.rules
+      ...reactRefresh.configs.vite.rules,
+      '@typescript-eslint/no-confusing-void-expression': 'off'
     }
   }
 );
