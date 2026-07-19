@@ -20,6 +20,10 @@
       {
         "command": "codexAgentMap.chooseCodexPath",
         "title": "Codex Agent Map: Choose Codex Executable"
+      },
+      {
+        "command": "codexAgentMap.signIn",
+        "title": "Codex Agent Map: Sign in with ChatGPT"
       }
     ],
     "configuration": {
