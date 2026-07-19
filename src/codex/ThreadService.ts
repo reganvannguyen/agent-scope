@@ -58,7 +58,7 @@ export class ThreadService {
 function parseThread(value: unknown, resumed: boolean): ThreadDetail | undefined {
   const summary = parseSummary(value);
   if (summary === undefined || !isRecord(value) || !Array.isArray(value.turns)) return undefined;
-  return { ...summary, turns: value.turns.flatMap(turn => { const parsed = parseTurn(turn); return parsed === undefined ? [] : [parsed]; }), resumed };
+  return { ...summary, turns: value.turns.flatMap(turn => { const parsed = normalizeTurn(turn); return parsed === undefined ? [] : [parsed]; }), resumed };
 }
 
 function parseSummary(value: unknown): ThreadSummary | undefined {
@@ -72,16 +72,16 @@ function parseSummary(value: unknown): ThreadSummary | undefined {
   };
 }
 
-function parseTurn(value: unknown): ConversationTurn | undefined {
+export function normalizeTurn(value: unknown): ConversationTurn | undefined {
   if (!isRecord(value) || typeof value.id !== 'string' || typeof value.status !== 'string' || !Array.isArray(value.items)) return undefined;
-  const turn: ConversationTurn = { id: value.id, status: value.status, items: value.items.flatMap(item => { const parsed = parseItem(item); return parsed === undefined ? [] : [parsed]; }) };
+  const turn: ConversationTurn = { id: value.id, status: value.status, items: value.items.flatMap(item => { const parsed = normalizeItem(item); return parsed === undefined ? [] : [parsed]; }) };
   if (isRecord(value.error) && typeof value.error.message === 'string') turn.error = value.error.message;
   if (typeof value.startedAt === 'number') turn.startedAt = value.startedAt;
   if (typeof value.completedAt === 'number') turn.completedAt = value.completedAt;
   return turn;
 }
 
-function parseItem(value: unknown): ConversationItem | undefined {
+export function normalizeItem(value: unknown): ConversationItem | undefined {
   if (!isRecord(value) || typeof value.id !== 'string' || typeof value.type !== 'string') return undefined;
   if (value.type === 'userMessage' && Array.isArray(value.content)) {
     return { id: value.id, type: value.type, text: value.content.flatMap(input => isRecord(input) && input.type === 'text' && typeof input.text === 'string' ? [input.text] : []).join('\n') };
