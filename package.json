@@ -59,6 +59,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.17.0",
+    "@types/dagre": "^0.7.54",
     "@types/node": "^22.10.2",
     "@types/react": "^19.0.3",
     "@types/react-dom": "^19.0.2",
@@ -73,6 +74,8 @@
     "vitest": "^4.1.10"
   },
   "dependencies": {
+    "@dagrejs/dagre": "^1.1.8",
+    "@xyflow/react": "^12.11.2",
     "dompurify": "^3.2.3",
     "marked": "^15.0.4",
     "minimatch": "^10.2.5",

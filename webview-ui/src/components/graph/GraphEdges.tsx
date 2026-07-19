@@ -1,0 +1,6 @@
+import { BaseEdge, EdgeLabelRenderer, getBezierPath, getSmoothStepPath, type EdgeProps } from '@xyflow/react';
+
+export function ArchitectureEdge(props: EdgeProps): React.JSX.Element { const [path, x, y] = getSmoothStepPath(props); return <><BaseEdge path={path} markerEnd={props.markerEnd} className="architecture-edge" /><Label x={x} y={y} value={props.label} /></>; }
+export function HierarchyEdge(props: EdgeProps): React.JSX.Element { const [path, x, y] = getSmoothStepPath(props); return <><BaseEdge path={path} markerEnd={props.markerEnd} className="hierarchy-edge" /><Label x={x} y={y} value={props.label} /></>; }
+export function ActivityEdge(props: EdgeProps): React.JSX.Element { const [path, x, y] = getBezierPath(props); const data = props.data as { confidence?: string; state?: string } | undefined; return <><BaseEdge path={path} markerEnd={props.markerEnd} className={`activity-edge ${data?.confidence ?? 'inferred'} ${data?.state ?? 'recent'}`} /><Label x={x} y={y} value={props.label} /></>; }
+function Label({ x, y, value }: { x: number; y: number; value: unknown }): React.JSX.Element | null { return typeof value === 'string' && value !== '' ? <EdgeLabelRenderer><span className="edge-label" style={{ transform: `translate(-50%, -50%) translate(${String(x)}px,${String(y)}px)` }}>{value}</span></EdgeLabelRenderer> : null; }

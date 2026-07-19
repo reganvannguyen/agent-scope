@@ -14,4 +14,10 @@ describe('parseWebviewMessage', () => {
     expect(parseWebviewMessage({ type: 'setSidebarWidth', width: 900 })).toBeUndefined();
     expect(parseWebviewMessage({ type: 'setComposerHeight', height: 20 })).toBeUndefined();
   });
+  it('validates visualization view and entity selections', () => {
+    expect(parseWebviewMessage({ type: 'selectViewMode', mode: 'agents' })).toEqual({ type: 'selectViewMode', mode: 'agents' });
+    expect(parseWebviewMessage({ type: 'selectGraphEntity', kind: 'agent', id: 'thread-1' })).toEqual({ type: 'selectGraphEntity', kind: 'agent', id: 'thread-1' });
+    expect(parseWebviewMessage({ type: 'selectViewMode', mode: 'unknown' })).toBeUndefined();
+    expect(parseWebviewMessage({ type: 'selectGraphEntity', kind: 'component', id: '' })).toBeUndefined();
+  });
 });

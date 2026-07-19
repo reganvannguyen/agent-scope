@@ -21,11 +21,16 @@ export type WebviewMessage =
   | { type: 'setSidebarWidth'; width: number }
   | { type: 'setComposerHeight'; height: number }
   | { type: 'openFile'; path: string }
-  | { type: 'openOutputChannel' };
+  | { type: 'openOutputChannel' }
+  | { type: 'selectViewMode'; mode: 'combined' | 'agents' | 'project' | 'chat' }
+  | { type: 'selectGraphEntity'; kind: 'agent' | 'component'; id: string }
+  | { type: 'initializeProjectMap' }
+  | { type: 'scanProjectMap' }
+  | { type: 'fitGraph' };
 
 export function parseWebviewMessage(value: unknown): WebviewMessage | undefined {
   if (!isRecord(value) || typeof value.type !== 'string') return undefined;
-  if (['ready', 'startConnection', 'restartConnection', 'beginLogin', 'startThread', 'refreshThreads', 'loadMoreThreads', 'interruptTurn', 'openOutputChannel'].includes(value.type)) {
+  if (['ready', 'startConnection', 'restartConnection', 'beginLogin', 'startThread', 'refreshThreads', 'loadMoreThreads', 'interruptTurn', 'openOutputChannel', 'initializeProjectMap', 'scanProjectMap', 'fitGraph'].includes(value.type)) {
     return { type: value.type } as WebviewMessage;
   }
   if ((value.type === 'previewThread' || value.type === 'resumeThread') && typeof value.threadId === 'string') {
@@ -42,5 +47,7 @@ export function parseWebviewMessage(value: unknown): WebviewMessage | undefined 
   if (value.type === 'setSidebarWidth' && typeof value.width === 'number' && Number.isFinite(value.width) && value.width >= 160 && value.width <= 480) return { type: value.type, width: Math.round(value.width) };
   if (value.type === 'setComposerHeight' && typeof value.height === 'number' && Number.isFinite(value.height) && value.height >= 96 && value.height <= 360) return { type: value.type, height: Math.round(value.height) };
   if (value.type === 'openFile' && typeof value.path === 'string') return { type: value.type, path: value.path };
+  if (value.type === 'selectViewMode' && (value.mode === 'combined' || value.mode === 'agents' || value.mode === 'project' || value.mode === 'chat')) return { type: value.type, mode: value.mode };
+  if (value.type === 'selectGraphEntity' && (value.kind === 'agent' || value.kind === 'component') && typeof value.id === 'string' && value.id.trim() !== '') return { type: value.type, kind: value.kind, id: value.id };
   return undefined;
 }

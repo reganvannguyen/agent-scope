@@ -1,0 +1,1 @@
+export function GraphLegend(): React.JSX.Element { return <div className="graph-legend" aria-label="Graph legend"><span>— Project architecture</span><span>→ Agent delegation</span><span>━━ Confirmed current</span><span>┄┄ Inferred current</span><span>··· Recent activity</span></div>; }
