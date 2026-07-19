@@ -26,7 +26,7 @@ export function App(): React.JSX.Element {
     <header className="app-header"><div><h1>Codex Workspace</h1><span>{state.selectedThread?.cwd ?? 'Current workspace'}</span></div><ConnectionStatus state={state.connection} account={state.account} /></header>
     {state.error ? <div className="banner error" role="alert"><span>{state.error}</span><button onClick={() => post({ type: 'openOutputChannel' })}>Open output</button></div> : null}
     {state.warning ? <div className="banner warning" role="status"><span>{state.warning}</span>{activeWarning && state.selectedThread ? <button onClick={() => post({ type: 'resumeThread', threadId: state.selectedThread?.id, confirmActive: true })}>Resume anyway</button> : null}</div> : null}
-    <ViewModeTabs selected={viewMode} />
+    <div className="workspace-toolbar"><ViewModeTabs selected={viewMode} />{state.visualization?.demo === true ? <><span className="demo-badge">Demo Mode</span><button onClick={() => post({ type: 'stopVisualizationDemo' })}>Stop Demo</button></> : <button onClick={() => post({ type: 'runVisualizationDemo' })}>Run Demo</button>}</div>
     {viewMode === 'chat' ? <ResizableWorkspace state={state} /> : <VisualWorkspace state={state} mode={viewMode} />}
     {viewMode === 'chat' || viewMode === 'combined' ? <PromptComposer state={state} /> : null}
   </div>;

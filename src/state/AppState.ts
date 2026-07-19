@@ -58,8 +58,9 @@ export interface AppState {
   sidebarWidth: number;
   composerHeight: number;
   viewMode: 'combined' | 'agents' | 'project' | 'chat';
+  completedAgentDisplay: 'show' | 'collapse' | 'activeOnly';
   visualization?: VisualizationSnapshot;
-  selectedGraphEntity?: { kind: 'agent' | 'component'; id: string };
+  selectedGraphEntity?: { kind: 'agent' | 'component'; id: string } | undefined;
   projectSuggestions: ArchitectureSuggestion[];
   pendingRequests: PendingServerRequest[];
   stopping: boolean;
@@ -70,6 +71,6 @@ export interface AppState {
 export function initialAppState(): AppState {
   return {
     connection: 'stopped', models: [], modes: [], selectedMode: 'default', threads: [], nextThreadCursor: null,
-    draft: '', sidebarCollapsed: false, sidebarWidth: 250, composerHeight: 112, viewMode: 'combined', projectSuggestions: [], pendingRequests: [], stopping: false
+    draft: '', sidebarCollapsed: false, sidebarWidth: 250, composerHeight: 112, viewMode: 'combined', completedAgentDisplay: 'collapse', projectSuggestions: [], pendingRequests: [], stopping: false
   };
 }

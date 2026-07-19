@@ -21,5 +21,6 @@ describe('parseWebviewMessage', () => {
     expect(parseWebviewMessage({ type: 'selectGraphEntity', kind: 'component', id: '' })).toBeUndefined();
     expect(parseWebviewMessage({ type: 'saveProjectMap', map: { schemaVersion: 1 } })).toBeDefined();
     expect(parseWebviewMessage({ type: 'saveProjectMap', map: 'unsafe' })).toBeUndefined();
+    expect(parseWebviewMessage({ type: 'runVisualizationDemo' })).toEqual({ type: 'runVisualizationDemo' });
   });
 });

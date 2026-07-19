@@ -35,6 +35,17 @@ export function activate(context: vscode.ExtensionContext): void {
     panel?.show();
     await controller?.handle({ type: 'beginLogin' });
   }));
+  context.subscriptions.push(vscode.commands.registerCommand('codexAgentMap.initializeProjectMap', () => controller?.initializeMapCommand()));
+  context.subscriptions.push(vscode.commands.registerCommand('codexAgentMap.scanProjectArchitecture', () => controller?.scanMapCommand()));
+  context.subscriptions.push(vscode.commands.registerCommand('codexAgentMap.runVisualizationDemo', () => controller?.runDemo()));
+  context.subscriptions.push(vscode.commands.registerCommand('codexAgentMap.stopVisualizationDemo', () => controller?.stopDemo()));
+  context.subscriptions.push(vscode.commands.registerCommand('codexAgentMap.openVisualWorkspace', () => { panel?.show(); controller?.showView('combined'); }));
+  context.subscriptions.push(vscode.commands.registerCommand('codexAgentMap.editProjectMap', () => { panel?.show(); controller?.showView('project'); }));
+  context.subscriptions.push(vscode.commands.registerCommand('codexAgentMap.saveProjectLayout', () => controller?.showView('project')));
+  context.subscriptions.push(vscode.commands.registerCommand('codexAgentMap.autoLayoutProject', () => controller?.showView('project')));
+  context.subscriptions.push(vscode.commands.registerCommand('codexAgentMap.resetAgentLayout', () => controller?.showView('agents')));
+  context.subscriptions.push(vscode.commands.registerCommand('codexAgentMap.fitVisualization', () => controller?.showView('combined')));
+  context.subscriptions.push(vscode.commands.registerCommand('codexAgentMap.showUnmappedActivity', () => controller?.showUnmappedActivity()));
 }
 
 export async function deactivate(): Promise<void> {

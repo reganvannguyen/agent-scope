@@ -20,6 +20,8 @@ import { DescendantApiUnsupportedError, DescendantDiscovery } from './agents/Des
 import { ProjectMapScanner } from './project-map/ProjectMapScanner';
 import { ProjectMapService } from './project-map/ProjectMapService';
 import { VisualizationCoordinator } from './visualization/VisualizationCoordinator';
+import { DemoEventSource } from './visualization/DemoEventSource';
+import type { VisualizationSnapshot } from './visualization/VisualizationCoordinator';
 
 const pref = {
   draft: 'codexAgentMap.draft', collapsed: 'codexAgentMap.sidebarCollapsed',
@@ -43,6 +45,9 @@ export class WorkspaceController implements vscode.Disposable {
   private readonly descendants: DescendantDiscovery;
   private readonly projectMap: ProjectMapService | undefined;
   private descendantTimer: NodeJS.Timeout | undefined;
+  private readonly activityTimer: NodeJS.Timeout;
+  private readonly demo: DemoEventSource;
+  private demoSnapshot: VisualizationSnapshot | undefined;
 
   public constructor(
     private readonly client: AppServerClient,
@@ -62,6 +67,8 @@ export class WorkspaceController implements vscode.Disposable {
     });
     const mapPath = vscode.workspace.getConfiguration('codexAgentMap').get<string>('projectMapPath', '.codex-agent-map/project-map.json');
     this.projectMap = this.cwd === undefined ? undefined : new ProjectMapService(this.cwd, mapPath);
+    this.demo = new DemoEventSource(snapshot => { this.demoSnapshot = snapshot.demo ? snapshot : undefined; this.syncVisualization(); });
+    this.activityTimer = setInterval(() => { this.visualization.expire(); if (this.demoSnapshot === undefined) this.syncVisualization(); }, 10_000);
     this.turns = new TurnService(client);
     this.approvals = new ApprovalService((id, result) => { this.client.respondId(id, result); });
     this.persistence = new SessionPersistence(context.workspaceState);
@@ -73,6 +80,7 @@ export class WorkspaceController implements vscode.Disposable {
       sidebarWidth: boundedSidebarWidth(context.workspaceState.get<unknown>(pref.sidebarWidth)),
       composerHeight: boundedComposerHeight(context.workspaceState.get<unknown>(pref.composerHeight)),
       viewMode: viewModePreference(context.workspaceState.get<unknown>(pref.viewMode)),
+      completedAgentDisplay: completedDisplaySetting(),
       selectedMode: storedMode === 'plan' ? 'plan' : 'default'
     });
     client.on('state', this.onState);
@@ -124,6 +132,8 @@ export class WorkspaceController implements vscode.Disposable {
         case 'scanProjectMap': await this.scanProjectMap(); return;
         case 'saveProjectMap': await this.saveProjectMap(message.map); return;
         case 'fitGraph': return;
+        case 'runVisualizationDemo': this.runDemo(); return;
+        case 'stopVisualizationDemo': this.stopDemo(); return;
       }
     } catch (error) {
       const detail = error instanceof Error ? error.message : 'Unknown operation failure';
@@ -134,6 +144,7 @@ export class WorkspaceController implements vscode.Disposable {
 
   public dispose(): void {
     if (this.descendantTimer !== undefined) clearTimeout(this.descendantTimer);
+    clearInterval(this.activityTimer); this.demo.dispose();
     this.descendants.cancel();
     this.client.off('state', this.onState);
     this.client.off('notification', this.onNotification);
@@ -278,7 +289,13 @@ export class WorkspaceController implements vscode.Disposable {
     await vscode.window.showTextDocument(document);
   }
 
-  private syncVisualization(): void { this.store.update({ visualization: this.visualization.snapshot }); }
+  public runDemo(): void { this.store.update({ viewMode: 'combined', selectedGraphEntity: undefined }); this.demo.start(); }
+  public stopDemo(): void { this.demo.stop(false); this.demoSnapshot = undefined; this.syncVisualization(); }
+  public initializeMapCommand(): Promise<void> { return this.initializeProjectMap(); }
+  public scanMapCommand(): Promise<void> { return this.scanProjectMap(); }
+  public showView(mode: 'combined' | 'agents' | 'project' | 'chat'): void { this.store.update({ viewMode: mode }); }
+  public showUnmappedActivity(): void { this.store.update({ warning: `${String(this.visualization.snapshot.unmappedActivityCount)} unmapped activity records are available in the current bounded snapshot.` }); }
+  private syncVisualization(): void { this.store.update({ visualization: this.demoSnapshot ?? this.visualization.snapshot }); }
   private selectGraphEntity(kind: 'agent' | 'component', id: string): void {
     const snapshot = this.visualization.snapshot;
     if (kind === 'agent' ? snapshot.agents[id] === undefined : snapshot.projectMap?.components.some(component => component.id === id) !== true) throw new Error(`Unknown ${kind} ID`);
@@ -367,3 +384,4 @@ function boundedSidebarWidth(value: unknown): number { return typeof value === '
 function boundedComposerHeight(value: unknown): number { return typeof value === 'number' && Number.isFinite(value) ? Math.min(360, Math.max(96, Math.round(value))) : 112; }
 function boundedSetting(name: string, fallback: number, minimum: number, maximum: number): number { const value = vscode.workspace.getConfiguration('codexAgentMap').get<number>(name, fallback); return Number.isFinite(value) ? Math.min(maximum, Math.max(minimum, Math.round(value))) : fallback; }
 function viewModePreference(value: unknown): 'combined' | 'agents' | 'project' | 'chat' { return value === 'agents' || value === 'project' || value === 'chat' ? value : 'combined'; }
+function completedDisplaySetting(): 'show' | 'collapse' | 'activeOnly' { const value = vscode.workspace.getConfiguration('codexAgentMap').get<string>('completedAgentDisplay', 'collapse'); return value === 'show' || value === 'activeOnly' ? value : 'collapse'; }

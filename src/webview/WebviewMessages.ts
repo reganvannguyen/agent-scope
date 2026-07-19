@@ -27,11 +27,13 @@ export type WebviewMessage =
   | { type: 'initializeProjectMap' }
   | { type: 'scanProjectMap' }
   | { type: 'saveProjectMap'; map: unknown }
-  | { type: 'fitGraph' };
+  | { type: 'fitGraph' }
+  | { type: 'runVisualizationDemo' }
+  | { type: 'stopVisualizationDemo' };
 
 export function parseWebviewMessage(value: unknown): WebviewMessage | undefined {
   if (!isRecord(value) || typeof value.type !== 'string') return undefined;
-  if (['ready', 'startConnection', 'restartConnection', 'beginLogin', 'startThread', 'refreshThreads', 'loadMoreThreads', 'interruptTurn', 'openOutputChannel', 'initializeProjectMap', 'scanProjectMap', 'fitGraph'].includes(value.type)) {
+  if (['ready', 'startConnection', 'restartConnection', 'beginLogin', 'startThread', 'refreshThreads', 'loadMoreThreads', 'interruptTurn', 'openOutputChannel', 'initializeProjectMap', 'scanProjectMap', 'fitGraph', 'runVisualizationDemo', 'stopVisualizationDemo'].includes(value.type)) {
     return { type: value.type } as WebviewMessage;
   }
   if ((value.type === 'previewThread' || value.type === 'resumeThread') && typeof value.threadId === 'string') {

@@ -28,7 +28,18 @@
       {
         "command": "codexAgentMap.signIn",
         "title": "Codex Agent Map: Sign in with ChatGPT"
-      }
+      },
+      { "command": "codexAgentMap.initializeProjectMap", "title": "Codex Agent Map: Initialize Project Map" },
+      { "command": "codexAgentMap.scanProjectArchitecture", "title": "Codex Agent Map: Scan Project Architecture" },
+      { "command": "codexAgentMap.editProjectMap", "title": "Codex Agent Map: Edit Project Map" },
+      { "command": "codexAgentMap.saveProjectLayout", "title": "Codex Agent Map: Save Project Layout" },
+      { "command": "codexAgentMap.autoLayoutProject", "title": "Codex Agent Map: Auto Layout Project" },
+      { "command": "codexAgentMap.resetAgentLayout", "title": "Codex Agent Map: Reset Agent Layout" },
+      { "command": "codexAgentMap.fitVisualization", "title": "Codex Agent Map: Fit Visualization" },
+      { "command": "codexAgentMap.runVisualizationDemo", "title": "Codex Agent Map: Run Visualization Demo" },
+      { "command": "codexAgentMap.stopVisualizationDemo", "title": "Codex Agent Map: Stop Visualization Demo" },
+      { "command": "codexAgentMap.showUnmappedActivity", "title": "Codex Agent Map: Show Unmapped Activity" },
+      { "command": "codexAgentMap.openVisualWorkspace", "title": "Codex Agent Map: Open Visual Workspace" }
     ],
     "configuration": {
       "title": "Codex Agent Map",

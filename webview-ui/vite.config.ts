@@ -12,7 +12,8 @@ export default defineConfig({
       input: resolve(__dirname, 'index.html'),
       output: {
         entryFileNames: 'index.js',
-        assetFileNames: 'index.[ext]'
+        assetFileNames: 'index.[ext]',
+        manualChunks: { graph: ['@xyflow/react', '@dagrejs/dagre'] }
       }
     }
   }

@@ -11,13 +11,14 @@ export interface ProjectComponent { id: string; name: string; type: string; desc
 export interface ProjectSuggestion { id: string; name: string; type: string; paths: string[]; confidence: string; evidence: string[] }
 export interface ArchitectureEdge { id: string; source: string; target: string; type: string; label?: string }
 export interface ActivityConnection { id: string; agentThreadId: string; componentId: string; activityType: string; confidence: 'confirmed' | 'inferred'; state: 'current' | 'recent' }
-export interface Visualization { agents: Record<string, RuntimeAgent>; hierarchyEdges: Record<string, { id: string; parentThreadId: string; childThreadId: string }>; projectMap?: { project: { name: string }; components: ProjectComponent[]; edges: ArchitectureEdge[] }; connections: Record<string, ActivityConnection>; componentRuntime: Record<string, { activeAgentIds: string[]; activeActivityTypes: string[]; recentlyTouchedFiles: string[]; pendingApprovalCount: number }>; demo: boolean; }
+export interface Visualization { agents: Record<string, RuntimeAgent>; hierarchyEdges: Record<string, { id: string; parentThreadId: string; childThreadId: string }>; projectMap?: { project: { name: string }; components: ProjectComponent[]; edges: ArchitectureEdge[] }; connections: Record<string, ActivityConnection>; componentRuntime: Record<string, { activeAgentIds: string[]; activeActivityTypes: string[]; recentlyTouchedFiles: string[]; pendingApprovalCount: number }>; unmappedActivityCount: number; demo: boolean; }
 export interface State {
   connection: string; workspaceCwd?: string; account?: AccountState; models: Model[]; modes: Mode[];
   selection?: { modelId: string; effort: string }; selectedMode: 'default' | 'plan';
   threads: Thread[]; nextThreadCursor: string | null; selectedThread?: Thread;
   draft: string; sidebarCollapsed: boolean; sidebarWidth: number; composerHeight: number; pendingRequests: PendingRequest[]; stopping: boolean;
   viewMode?: ViewMode; visualization?: Visualization; selectedGraphEntity?: { kind: 'agent' | 'component'; id: string };
+  completedAgentDisplay?: 'show' | 'collapse' | 'activeOnly';
   projectSuggestions?: ProjectSuggestion[];
   error?: string; warning?: string;
 }

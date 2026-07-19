@@ -10,12 +10,12 @@ import type { ProjectMap } from '../project-map/ProjectMapModels';
 import { reduceVisualization, type TrailSettings } from './VisualizationReducer';
 import { initialVisualizationState, type AgentProjectConnection, type ProjectComponentRuntimeState, type VisualizationState } from './VisualizationState';
 
-export interface VisualizationSnapshot { agents: Record<string, RuntimeAgent>; hierarchyEdges: RuntimeAgentState['hierarchyEdges']; projectMap?: ProjectMap; connections: Record<string, AgentProjectConnection>; componentRuntime: Record<string, ProjectComponentRuntimeState>; demo: boolean }
+export interface VisualizationSnapshot { agents: Record<string, RuntimeAgent>; hierarchyEdges: RuntimeAgentState['hierarchyEdges']; projectMap?: ProjectMap; connections: Record<string, AgentProjectConnection>; componentRuntime: Record<string, ProjectComponentRuntimeState>; unmappedActivityCount: number; demo: boolean }
 
 export class VisualizationCoordinator {
   private state: VisualizationState = initialVisualizationState(initialRuntimeAgentState());
   public constructor(private readonly roots: string[], private readonly settings: TrailSettings) {}
-  public get snapshot(): VisualizationSnapshot { return { agents: this.state.agents.agents, hierarchyEdges: this.state.agents.hierarchyEdges, ...(this.state.projectMap === undefined ? {} : { projectMap: this.state.projectMap }), connections: this.state.connections, componentRuntime: this.state.componentRuntime, demo: this.state.demo }; }
+  public get snapshot(): VisualizationSnapshot { return { agents: this.state.agents.agents, hierarchyEdges: this.state.agents.hierarchyEdges, ...(this.state.projectMap === undefined ? {} : { projectMap: this.state.projectMap }), connections: this.state.connections, componentRuntime: this.state.componentRuntime, unmappedActivityCount: this.state.unmappedActivityCount, demo: this.state.demo }; }
   public get agentState(): RuntimeAgentState { return this.state.agents; }
   public selectRoot(thread: ThreadDetail, at = Date.now()): void { const agents = reduceAgentEvent(initialRuntimeAgentState(), { type: 'rootSelected', threadId: thread.id, title: thread.title, cwd: thread.cwd, model: thread.model ?? null, historical: !thread.resumed, at }); const projectMap = this.state.projectMap; this.state = { ...initialVisualizationState(agents), ...(projectMap === undefined ? {} : { projectMap }), componentRuntime: this.state.componentRuntime }; }
   public applyAgentEvents(events: Parameters<typeof reduceAgentEvent>[1][]): void { let agents = this.state.agents; for (const event of events) agents = reduceAgentEvent(agents, event); this.state = reduceVisualization(this.state, { type: 'agentsReplaced', agents }, this.settings); }
@@ -23,6 +23,7 @@ export class VisualizationCoordinator {
   public approval(threadId: string, pending: boolean, input = false, at = Date.now()): void { this.applyAgentEvents([{ type: 'approvalChanged', threadId, pending, input, at }]); }
   public disconnected(at = Date.now()): void { this.applyAgentEvents([{ type: 'disconnected', at }]); }
   public expire(at = Date.now()): void { this.state = reduceVisualization(this.state, { type: 'expire', at }, this.settings); }
+  public setDemo(active: boolean): void { this.state = reduceVisualization(this.state, { type: 'demoChanged', active }, this.settings); }
   public notification(method: string, params: unknown, at = Date.now()): void {
     if (!isRecord(params) || typeof params.threadId !== 'string') return;
     const threadId = params.threadId;
