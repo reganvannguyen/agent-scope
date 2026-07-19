@@ -19,6 +19,7 @@ export type WebviewMessage =
   | { type: 'setDraft'; text: string }
   | { type: 'setSidebarCollapsed'; collapsed: boolean }
   | { type: 'setSidebarWidth'; width: number }
+  | { type: 'setComposerHeight'; height: number }
   | { type: 'openFile'; path: string }
   | { type: 'openOutputChannel' };
 
@@ -39,6 +40,7 @@ export function parseWebviewMessage(value: unknown): WebviewMessage | undefined 
   if (value.type === 'resolveServerRequest' && isRequestId(value.requestId)) return { type: value.type, requestId: value.requestId, answer: value.answer };
   if (value.type === 'setSidebarCollapsed' && typeof value.collapsed === 'boolean') return { type: value.type, collapsed: value.collapsed };
   if (value.type === 'setSidebarWidth' && typeof value.width === 'number' && Number.isFinite(value.width) && value.width >= 160 && value.width <= 480) return { type: value.type, width: Math.round(value.width) };
+  if (value.type === 'setComposerHeight' && typeof value.height === 'number' && Number.isFinite(value.height) && value.height >= 96 && value.height <= 360) return { type: value.type, height: Math.round(value.height) };
   if (value.type === 'openFile' && typeof value.path === 'string') return { type: value.type, path: value.path };
   return undefined;
 }

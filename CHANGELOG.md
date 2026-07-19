@@ -11,3 +11,4 @@
 - Add strict TypeScript validation and unit/integration coverage for protocol, state, services, controls, and Webview boundaries.
 - Fall back to the Codex executable bundled with the official OpenAI VS Code extension when `codex` is absent from the Extension Host's `PATH`.
 - Add a draggable, keyboard-accessible divider that resizes and persists the Recent Threads panel width.
+- Add a resizable persisted composer, sticky thread controls, hidden panel scrollbars, bottom-aligned thread selection, and discardable unsent local threads.

@@ -1,8 +1,14 @@
+import { useEffect, useRef } from 'react';
 import type { Item, Thread } from '../types';
 import { renderMarkdown } from '../markdown';
 import { post } from '../vscode';
 
 export function ConversationView({ thread }: { thread?: Thread }): React.JSX.Element {
+  const end = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const frame = window.requestAnimationFrame(() => { end.current?.scrollIntoView({ block: 'end' }); });
+    return () => window.cancelAnimationFrame(frame);
+  }, [thread?.id]);
   if (!thread) return <section className="empty"><h2>Start a Codex conversation</h2><p>Create a new thread or select a recent one.</p><button onClick={() => post({ type: 'startThread' })}>New thread</button></section>;
   return <section className="conversation" aria-label="Conversation" aria-live="polite">
     <header className="thread-header"><div><h2>{thread.title}</h2><small>{thread.cwd}</small></div>
@@ -12,7 +18,7 @@ export function ConversationView({ thread }: { thread?: Thread }): React.JSX.Ele
       {turn.items.map(item => <ConversationItem item={item} key={item.id} />)}
       {turn.error ? <div className="error-card">{turn.error}</div> : null}
       <div className="turn-status">{turn.status}</div>
-    </article>)}</div>
+    </article>)}<div ref={end} className="conversation-end" /></div>
   </section>;
 }
 

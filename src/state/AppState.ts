@@ -37,6 +37,7 @@ export interface ThreadDetail extends ThreadSummary {
   model?: string;
   effort?: string;
   resumed: boolean;
+  localOnly?: boolean;
 }
 
 export interface AppState {
@@ -52,6 +53,7 @@ export interface AppState {
   draft: string;
   sidebarCollapsed: boolean;
   sidebarWidth: number;
+  composerHeight: number;
   pendingRequests: PendingServerRequest[];
   stopping: boolean;
   error?: string;
@@ -61,6 +63,6 @@ export interface AppState {
 export function initialAppState(): AppState {
   return {
     connection: 'stopped', models: [], modes: [], selectedMode: 'default', threads: [], nextThreadCursor: null,
-    draft: '', sidebarCollapsed: false, sidebarWidth: 250, pendingRequests: [], stopping: false
+    draft: '', sidebarCollapsed: false, sidebarWidth: 250, composerHeight: 112, pendingRequests: [], stopping: false
   };
 }

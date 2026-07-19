@@ -9,7 +9,7 @@ Codex Agent Map is a VS Code extension that provides a complete root-agent Codex
 - Uses the App Server initialization handshake over newline-delimited JSON on stdin/stdout.
 - Reuses existing Codex/ChatGPT authentication and can start browser sign-in when needed.
 - Discovers models, supported reasoning efforts, and collaboration modes dynamically.
-- Creates, lists, previews, resumes, and restores workspace threads, with a collapsible and resizable thread sidebar.
+- Creates, lists, previews, resumes, and restores workspace threads, with a collapsible and resizable thread sidebar. Empty local threads are discarded unless their first prompt is sent.
 - Displays complete stored history without resuming a thread.
 - Streams agent messages, plans, commands, file changes, diffs, tools, warnings, and errors.
 - Sends guidance to an active turn with `turn/steer` and stops with `turn/interrupt`.

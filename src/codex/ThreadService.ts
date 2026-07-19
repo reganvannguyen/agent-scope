@@ -15,7 +15,10 @@ export class ThreadService {
     if (!isRecord(raw) || !Array.isArray(raw.data) || (raw.nextCursor !== null && typeof raw.nextCursor !== 'string')) {
       throw new Error('Invalid thread/list response');
     }
-    return { threads: raw.data.flatMap(value => { const item = parseSummary(value); return item === undefined ? [] : [item]; }), nextCursor: raw.nextCursor };
+    return { threads: raw.data.flatMap(value => {
+      const item = parseSummary(value);
+      return item === undefined || item.preview.trim() === '' ? [] : [item];
+    }), nextCursor: raw.nextCursor };
   }
 
   public async read(threadId: string): Promise<ThreadDetail> {

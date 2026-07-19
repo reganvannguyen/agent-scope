@@ -19,6 +19,7 @@ import { resolveWorkspacePath } from './webview/WorkspacePath';
 const pref = {
   draft: 'codexAgentMap.draft', collapsed: 'codexAgentMap.sidebarCollapsed',
   sidebarWidth: 'codexAgentMap.sidebarWidth',
+  composerHeight: 'codexAgentMap.composerHeight',
   model: 'codexAgentMap.model', effort: 'codexAgentMap.effort', mode: 'codexAgentMap.mode'
 };
 
@@ -51,6 +52,7 @@ export class WorkspaceController implements vscode.Disposable {
       draft: stringPreference(context, pref.draft),
       sidebarCollapsed: context.workspaceState.get<boolean>(pref.collapsed, false),
       sidebarWidth: boundedSidebarWidth(context.workspaceState.get<unknown>(pref.sidebarWidth)),
+      composerHeight: boundedComposerHeight(context.workspaceState.get<unknown>(pref.composerHeight)),
       selectedMode: storedMode === 'plan' ? 'plan' : 'default'
     });
     client.on('state', this.onState);
@@ -78,7 +80,7 @@ export class WorkspaceController implements vscode.Disposable {
         case 'startConnection': await this.connect(); return;
         case 'restartConnection': await this.connect(true); return;
         case 'beginLogin': await this.beginLogin(); return;
-        case 'startThread': await this.startThread(); return;
+        case 'startThread': this.startThread(); return;
         case 'previewThread': await this.previewThread(message.threadId); return;
         case 'resumeThread': await this.resumeThread(message.threadId, message.confirmActive === true); return;
         case 'refreshThreads': await this.refreshThreads(false); return;
@@ -92,6 +94,7 @@ export class WorkspaceController implements vscode.Disposable {
         case 'setDraft': this.store.update({ draft: message.text }); await this.context.workspaceState.update(pref.draft, message.text); return;
         case 'setSidebarCollapsed': this.store.update({ sidebarCollapsed: message.collapsed }); await this.context.workspaceState.update(pref.collapsed, message.collapsed); return;
         case 'setSidebarWidth': this.store.update({ sidebarWidth: message.width }); await this.context.workspaceState.update(pref.sidebarWidth, message.width); return;
+        case 'setComposerHeight': this.store.update({ composerHeight: message.height }); await this.context.workspaceState.update(pref.composerHeight, message.height); return;
         case 'openFile': await this.openFile(message.path); return;
         case 'openOutputChannel': this.output.show(true); return;
       }
@@ -138,10 +141,15 @@ export class WorkspaceController implements vscode.Disposable {
     await this.persistence.rememberThread(threadId);
   }
 
-  private async startThread(): Promise<void> {
-    const thread = await this.threads.start(this.store.snapshot.selection?.modelId);
-    this.store.update({ selectedThread: thread, threads: dedupe([thread, ...this.store.snapshot.threads]), error: '' });
-    await this.persistence.rememberThread(thread.id);
+  private startThread(): void {
+    const now = Date.now();
+    this.store.update({
+      selectedThread: {
+        id: `local-new-thread:${String(now)}`, title: 'New thread', preview: '', cwd: this.cwd ?? 'No workspace',
+        status: 'idle', updatedAt: Math.floor(now / 1000), turns: [], resumed: true, localOnly: true
+      },
+      error: '', warning: ''
+    });
   }
 
   private async resumeThread(threadId: string, confirmActive: boolean): Promise<void> {
@@ -164,9 +172,15 @@ export class WorkspaceController implements vscode.Disposable {
 
   private async sendMessage(text: string): Promise<void> {
     let thread = this.store.snapshot.selectedThread;
-    if (thread === undefined) { await this.startThread(); thread = this.store.snapshot.selectedThread; }
+    if (thread === undefined) { this.startThread(); thread = this.store.snapshot.selectedThread; }
     if (thread === undefined) throw new Error('No thread selected');
     if (!thread.resumed) throw new Error('Resume this thread before sending a message');
+    if (thread.localOnly === true) {
+      const materialized = await this.threads.start(this.store.snapshot.selection?.modelId);
+      thread = materialized;
+      this.store.update({ selectedThread: materialized, threads: dedupe([materialized, ...this.store.snapshot.threads]) });
+      await this.persistence.rememberThread(materialized.id);
+    }
     if (this.turns.activeId !== undefined) {
       await this.turns.steer(thread.id, text);
       this.store.update({ draft: '', error: '' });
@@ -272,3 +286,4 @@ function stringPreference(context: vscode.ExtensionContext, key: string): string
 function dedupe<T extends { id: string }>(items: T[]): T[] { return [...new Map(items.map(item => [item.id, item])).values()]; }
 function userError(detail: string): string { return detail === 'ACTIVE_THREAD_CONFIRMATION_REQUIRED' ? 'Confirm before resuming a thread that may be active elsewhere.' : detail; }
 function boundedSidebarWidth(value: unknown): number { return typeof value === 'number' && Number.isFinite(value) ? Math.min(480, Math.max(160, Math.round(value))) : 250; }
+function boundedComposerHeight(value: unknown): number { return typeof value === 'number' && Number.isFinite(value) ? Math.min(360, Math.max(96, Math.round(value))) : 112; }

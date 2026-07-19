@@ -24,6 +24,11 @@ describe('ThreadService', () => {
     });
   });
 
+  it('hides legacy server threads that never received a prompt', async () => {
+    const client = mockClient(() => ({ data: [{ ...baseThread, id: 'empty', preview: '' }, baseThread], nextCursor: null }));
+    await expect(new ThreadService(client).list()).resolves.toMatchObject({ threads: [{ id: 'thread-1' }] });
+  });
+
   it('reads complete history without resuming and excludes hidden reasoning content', async () => {
     const client = mockClient((method, params) => {
       expect(method).toBe('thread/read');
