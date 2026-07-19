@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/reganvannguyen/agent-scope/schemas/project-map.schema.json",
+  "title": "Codex Agent Map project architecture",
+  "type": "object",
+  "required": ["schemaVersion", "project", "components", "edges"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "project": { "type": "object", "required": ["name"], "properties": { "name": { "type": "string", "minLength": 1 } } },
+    "components": { "type": "array", "items": { "$ref": "#/$defs/component" } },
+    "edges": { "type": "array", "items": { "$ref": "#/$defs/edge" } }
+  },
+  "$defs": {
+    "position": { "type": "object", "required": ["x", "y"], "properties": { "x": { "type": "number" }, "y": { "type": "number" } } },
+    "component": { "type": "object", "required": ["id", "name", "type", "paths", "position"], "properties": { "id": { "type": "string", "minLength": 1 }, "name": { "type": "string", "minLength": 1 }, "type": { "enum": ["frontend", "backend", "service", "mcp", "database", "cache", "queue", "storage", "external", "tests", "shared", "infrastructure", "other"] }, "description": { "type": "string" }, "paths": { "type": "array", "items": { "type": "string" } }, "position": { "$ref": "#/$defs/position" }, "collapsed": { "type": "boolean" } } },
+    "edge": { "type": "object", "required": ["id", "source", "target", "type"], "properties": { "id": { "type": "string", "minLength": 1 }, "source": { "type": "string" }, "target": { "type": "string" }, "type": { "type": "string" }, "label": { "type": "string" } } }
+  }
+}
