@@ -13,6 +13,7 @@ import { initialAppState } from './state/AppState';
 import { reduceNotification } from './state/ConversationReducer';
 import { SelectionService, type FullSelection } from './state/SelectionService';
 import { SessionPersistence } from './state/SessionPersistence';
+import { materializeSessionDraft, mergeSessionLibrary, reorderVisibleSessions, selectSession, setSessionExpanded, setSessionVisible, startSessionDraft } from './state/SessionWorkspace';
 import type { WebviewMessage } from './webview/WebviewMessages';
 import { resolveWorkspacePath } from './webview/WorkspacePath';
 import { descendantEvents } from './agents/DescendantReconciler';
@@ -72,6 +73,7 @@ export class WorkspaceController implements vscode.Disposable {
     this.turns = new TurnService(client);
     this.approvals = new ApprovalService((id, result) => { this.client.respondId(id, result); });
     this.persistence = new SessionPersistence(context.workspaceState);
+    const sessionPreferences = this.persistence.preferences;
     const storedMode = context.workspaceState.get<unknown>(pref.mode);
     this.store.update({
       ...(this.cwd === undefined ? {} : { workspaceCwd: this.cwd }),
@@ -82,6 +84,7 @@ export class WorkspaceController implements vscode.Disposable {
       viewMode: viewModePreference(context.workspaceState.get<unknown>(pref.viewMode)),
       completedAgentDisplay: completedDisplaySetting(),
       selectedMode: storedMode === 'plan' ? 'plan' : 'default'
+      , sessionWorkspace: { ...this.store.snapshot.sessionWorkspace, visibleSessionIds: sessionPreferences.visibleSessionIds, ...(sessionPreferences.selectedSessionId === undefined ? {} : { selectedSessionId: sessionPreferences.selectedSessionId }), expandedSessionIds: sessionPreferences.expandedSessionIds, chatOpen: sessionPreferences.chatOpen, mapMode: sessionPreferences.mapMode }
     });
     client.on('state', this.onState);
     client.on('notification', this.onNotification);
@@ -136,6 +139,16 @@ export class WorkspaceController implements vscode.Disposable {
         case 'fitGraph': return;
         case 'runVisualizationDemo': this.runDemo(); return;
         case 'stopVisualizationDemo': this.stopDemo(); return;
+        case 'selectSession': await this.previewThread(message.sessionId); return;
+        case 'setChatOpen': this.store.update({ sessionWorkspace: { ...this.store.snapshot.sessionWorkspace, chatOpen: message.open } }); await this.persistSessionWorkspace(); return;
+        case 'setSessionVisible': this.store.update({ sessionWorkspace: setSessionVisible(this.store.snapshot.sessionWorkspace, message.sessionId, message.visible) }); await this.persistSessionWorkspace(); return;
+        case 'setSessionExpanded': this.store.update({ sessionWorkspace: setSessionExpanded(this.store.snapshot.sessionWorkspace, message.sessionId, message.expanded) }); await this.persistSessionWorkspace(); return;
+        case 'reorderVisibleSessions': this.store.update({ sessionWorkspace: reorderVisibleSessions(this.store.snapshot.sessionWorkspace, message.sessionIds) }); await this.persistSessionWorkspace(); return;
+        case 'setMapMode': this.store.update({ sessionWorkspace: { ...this.store.snapshot.sessionWorkspace, mapMode: message.mode } }); await this.persistSessionWorkspace(); return;
+        case 'startSessionDraft': this.startThread(); return;
+        case 'updateSessionDraft': this.store.update({ draft: message.text, sessionWorkspace: { ...this.store.snapshot.sessionWorkspace, draftNewSession: this.store.snapshot.sessionWorkspace.draftNewSession === undefined ? undefined : { ...this.store.snapshot.sessionWorkspace.draftNewSession, text: message.text } } }); return;
+        case 'cancelSessionDraft': this.cancelSessionDraft(); return;
+        case 'selectSessionAgent': this.store.update({ sessionWorkspace: { ...this.store.snapshot.sessionWorkspace, ...(message.agentId === undefined ? { selectedAgentId: undefined } : { selectedAgentId: message.agentId }) } }); return;
       }
     } catch (error) {
       const detail = error instanceof Error ? error.message : 'Unknown operation failure';
@@ -173,25 +186,29 @@ export class WorkspaceController implements vscode.Disposable {
     if (append && cursor === null) return;
     const page = await this.threads.list(cursor);
     const threads = append ? dedupe([...this.store.snapshot.threads, ...page.threads]) : page.threads;
-    this.store.update({ threads, nextThreadCursor: page.nextCursor });
+    this.store.update({ threads, nextThreadCursor: page.nextCursor, sessionWorkspace: mergeSessionLibrary(this.store.snapshot.sessionWorkspace, page.threads, append) });
   }
 
   private async previewThread(threadId: string): Promise<void> {
     this.requireKnownThread(threadId);
     const thread = await this.threads.read(threadId);
-    this.store.update({ selectedThread: thread, error: '', warning: '' });
+    let workspace = selectSession(this.store.snapshot.sessionWorkspace, threadId, thread);
+    if (!workspace.visibleSessionIds.includes(threadId)) workspace = setSessionVisible(workspace, threadId, true);
+    this.store.update({ selectedThread: thread, sessionWorkspace: workspace, error: '', warning: '' });
     this.visualization.selectRoot(thread); this.syncVisualization(); this.scheduleDescendantPoll();
     await this.persistence.rememberThread(threadId);
+    await this.persistSessionWorkspace();
   }
 
   private startThread(): void {
     const now = Date.now();
+    const workspace = startSessionDraft(this.store.snapshot.sessionWorkspace, `draft:${String(now)}`);
     this.store.update({
       selectedThread: {
         id: `local-new-thread:${String(now)}`, title: 'New thread', preview: '', cwd: this.cwd ?? 'No workspace',
         status: 'idle', updatedAt: Math.floor(now / 1000), turns: [], resumed: true, localOnly: true
       },
-      error: '', warning: ''
+      sessionWorkspace: workspace, draft: '', error: '', warning: ''
     });
     const selected = this.store.snapshot.selectedThread; if (selected !== undefined) { this.visualization.selectRoot(selected); this.syncVisualization(); }
   }
@@ -206,13 +223,17 @@ export class WorkspaceController implements vscode.Disposable {
       return;
     }
     const resumed = await this.threads.resumeConfirmed(threadId);
+    let workspace = selectSession(this.store.snapshot.sessionWorkspace, threadId, resumed.thread);
+    if (!workspace.visibleSessionIds.includes(threadId)) workspace = setSessionVisible(workspace, threadId, true);
     this.store.update({
       selectedThread: resumed.thread,
+      sessionWorkspace: workspace,
       selection: { modelId: resumed.model, effort: resumed.effort ?? this.store.snapshot.selection?.effort ?? 'medium' },
       warning: ''
     });
     this.visualization.selectRoot(resumed.thread); this.syncVisualization(); this.scheduleDescendantPoll();
     await this.persistence.rememberThread(threadId);
+    await this.persistSessionWorkspace();
   }
 
   private async sendMessage(text: string): Promise<void> {
@@ -220,24 +241,28 @@ export class WorkspaceController implements vscode.Disposable {
     if (thread === undefined) { this.startThread(); thread = this.store.snapshot.selectedThread; }
     if (thread === undefined) throw new Error('No thread selected');
     if (!thread.resumed) throw new Error('Resume this thread before sending a message');
+    let newSession = false;
     if (thread.localOnly === true) {
-      const materialized = await this.threads.start(this.store.snapshot.selection?.modelId);
-      thread = materialized;
-      this.store.update({ selectedThread: materialized, threads: dedupe([materialized, ...this.store.snapshot.threads]) });
-      this.visualization.selectRoot(materialized); this.syncVisualization();
-      await this.persistence.rememberThread(materialized.id);
+      const workspace = this.store.snapshot.sessionWorkspace;
+      if (workspace.draftNewSession !== undefined) this.store.update({ sessionWorkspace: { ...workspace, draftNewSession: { ...workspace.draftNewSession, text, state: 'submitting' } } });
+      try { thread = await this.threads.start(this.store.snapshot.selection?.modelId); newSession = true; }
+      catch (error) { this.restoreDraftEditing(); throw error; }
     }
-    if (this.turns.activeId !== undefined) {
+    if (this.turns.activeIdFor(thread.id) !== undefined) {
       await this.turns.steer(thread.id, text);
       this.store.update({ draft: '', error: '' });
     } else {
       const selection = this.store.snapshot.selection;
       const mode = this.store.snapshot.modes.find(entry => entry.mode === this.store.snapshot.selectedMode);
-      const turn = await this.turns.start(thread.id, text, {
-        ...(selection === undefined ? {} : { model: selection.modelId, effort: selection.effort }),
-        ...(mode === undefined ? {} : { mode })
-      });
-      this.store.update({ selectedThread: { ...thread, status: 'active', turns: [...thread.turns, turn] }, draft: '', stopping: false, error: '' });
+      let turn;
+      try { turn = await this.turns.start(thread.id, text, {
+          ...(selection === undefined ? {} : { model: selection.modelId, effort: selection.effort }),
+          ...(mode === undefined ? {} : { mode })
+        }); }
+      catch (error) { if (newSession) this.restoreDraftEditing(); throw error; }
+      const activeThread = { ...thread, status: 'active' as const, turns: [...thread.turns, turn] };
+      this.store.update({ selectedThread: activeThread, ...(newSession ? { threads: dedupe([activeThread, ...this.store.snapshot.threads]), sessionWorkspace: materializeSessionDraft(this.store.snapshot.sessionWorkspace, activeThread) } : {}), draft: '', stopping: false, error: '' });
+      if (newSession) { this.visualization.selectRoot(activeThread); this.syncVisualization(); await this.persistence.rememberThread(thread.id); await this.persistSessionWorkspace(); }
     }
     await this.context.workspaceState.update(pref.draft, '');
   }
@@ -251,17 +276,17 @@ export class WorkspaceController implements vscode.Disposable {
 
   private selectModel(modelId: string): void {
     const current = this.fullSelection();
-    const next = new SelectionService(this.store.snapshot.models, this.store.snapshot.modes).selectModel(current, modelId, this.turns.activeId !== undefined);
+    const next = new SelectionService(this.store.snapshot.models, this.store.snapshot.modes).selectModel(current, modelId, this.selectedTurnActive());
     this.applySelection(next);
   }
   private selectEffort(effort: string): void {
     const current = this.fullSelection();
-    const next = new SelectionService(this.store.snapshot.models, this.store.snapshot.modes).selectEffort(current, effort, this.turns.activeId !== undefined);
+    const next = new SelectionService(this.store.snapshot.models, this.store.snapshot.modes).selectEffort(current, effort, this.selectedTurnActive());
     this.applySelection(next);
   }
   private selectMode(mode: 'default' | 'plan'): void {
     const current = this.fullSelection();
-    const next = new SelectionService(this.store.snapshot.models, this.store.snapshot.modes).selectMode(current, mode, this.turns.activeId !== undefined);
+    const next = new SelectionService(this.store.snapshot.models, this.store.snapshot.modes).selectMode(current, mode, this.selectedTurnActive());
     this.applySelection(next);
   }
 
@@ -362,11 +387,13 @@ export class WorkspaceController implements vscode.Disposable {
     const thread = this.store.snapshot.selectedThread;
     if (thread === undefined) return;
     const result = reduceNotification(thread, notification.method, notification.params);
-    const patch: Partial<ReturnType<typeof initialAppState>> = { selectedThread: result.thread };
+    const workspace = this.store.snapshot.sessionWorkspace;
+    const record = workspace.library[thread.id];
+    const patch: Partial<ReturnType<typeof initialAppState>> = { selectedThread: result.thread, ...(record === undefined ? {} : { sessionWorkspace: { ...workspace, library: { ...workspace.library, [thread.id]: { ...record, conversation: result.thread, status: result.thread.status === 'systemError' ? 'failed' : result.thread.status === 'notLoaded' ? 'completed' : result.thread.status } } } }) };
     if (result.error !== undefined) patch.error = result.error;
     if (result.warning !== undefined) patch.warning = result.warning;
     if (result.completedTurnId !== undefined) {
-      this.turns.complete(result.completedTurnId);
+      this.turns.complete(thread.id, result.completedTurnId);
       this.approvals.clearTurn(thread.id, result.completedTurnId);
       patch.pendingRequests = this.approvals.requests;
       patch.stopping = false;
@@ -374,6 +401,11 @@ export class WorkspaceController implements vscode.Disposable {
     this.store.update(patch);
     this.scheduleDescendantPoll();
   };
+
+  private selectedTurnActive(): boolean { const id = this.store.snapshot.sessionWorkspace.selectedSessionId; return id !== undefined && this.turns.activeIdFor(id) !== undefined; }
+  private restoreDraftEditing(): void { const workspace = this.store.snapshot.sessionWorkspace; if (workspace.draftNewSession !== undefined) this.store.update({ sessionWorkspace: { ...workspace, draftNewSession: { ...workspace.draftNewSession, state: 'editing' } } }); }
+  private cancelSessionDraft(): void { const workspace = this.store.snapshot.sessionWorkspace; if (workspace.draftNewSession === undefined) return; const conversation = workspace.selectedSessionId === undefined ? undefined : workspace.library[workspace.selectedSessionId]?.conversation; this.store.update({ sessionWorkspace: { ...workspace, draftNewSession: undefined, chatOpen: workspace.selectedSessionId !== undefined }, draft: '', ...(conversation === undefined ? {} : { selectedThread: conversation }) }); }
+  private async persistSessionWorkspace(): Promise<void> { const value = this.store.snapshot.sessionWorkspace; await this.persistence.save({ version: 1, visibleSessionIds: value.visibleSessionIds, ...(value.selectedSessionId === undefined ? {} : { selectedSessionId: value.selectedSessionId }), expandedSessionIds: value.expandedSessionIds, chatOpen: value.chatOpen, mapMode: value.mapMode }); }
 }
 
 function stringPreference(context: vscode.ExtensionContext, key: string): string {

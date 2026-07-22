@@ -29,7 +29,7 @@ describe('TurnService', () => {
     await expect(service.start('thread-1', ' ')).rejects.toThrow('blank');
     await service.start('thread-1', 'hello');
     await expect(service.start('thread-1', 'again')).rejects.toThrow('already active');
-    service.complete('turn-1');
+    service.complete('thread-1', 'turn-1');
     expect(service.activeId).toBeUndefined();
   });
 
@@ -57,7 +57,22 @@ describe('TurnService', () => {
     expect(service.activeId).toBe('turn-1');
     expect(service.isStopping).toBe(true);
     await expect(service.interrupt('thread-1')).rejects.toThrow('already in progress');
-    service.complete('turn-1');
+    service.complete('thread-1', 'turn-1');
     expect(service.activeId).toBeUndefined();
+  });
+
+  it('keeps ownership per session and refuses cross-session steering or interruption', async () => {
+    const request = vi.fn((method: string, params: unknown) => Promise.resolve(method === 'turn/start'
+      ? { turn: { id: (params as { threadId: string }).threadId === 'thread-1' ? 'turn-1' : 'turn-2', status: 'inProgress', items: [] } }
+      : method === 'turn/steer' ? { turnId: 'turn-1' } : {}));
+    const service = new TurnService({ request: request as RpcClient['request'] });
+    await service.start('thread-1', 'one');
+    await service.start('thread-2', 'two');
+    expect(service.activeIdFor('thread-1')).toBe('turn-1');
+    expect(service.activeIdFor('thread-2')).toBe('turn-2');
+    await expect(service.steer('thread-3', 'wrong')).rejects.toThrow('No active turn');
+    await expect(service.interrupt('thread-3')).rejects.toThrow('No active turn');
+    service.complete('thread-1', 'turn-2');
+    expect(service.activeIdFor('thread-1')).toBe('turn-1');
   });
 });

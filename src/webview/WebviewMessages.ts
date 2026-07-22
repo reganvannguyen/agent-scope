@@ -31,13 +31,35 @@ export type WebviewMessage =
   | { type: 'saveProjectMap'; map: unknown }
   | { type: 'fitGraph' }
   | { type: 'runVisualizationDemo' }
-  | { type: 'stopVisualizationDemo' };
+  | { type: 'stopVisualizationDemo' }
+  | { type: 'selectSession'; sessionId: string }
+  | { type: 'setChatOpen'; open: boolean }
+  | { type: 'setSessionVisible'; sessionId: string; visible: boolean }
+  | { type: 'setSessionExpanded'; sessionId: string; expanded: boolean }
+  | { type: 'reorderVisibleSessions'; sessionIds: string[] }
+  | { type: 'setMapMode'; mode: 'focus' | 'compareVisible' }
+  | { type: 'startSessionDraft' }
+  | { type: 'updateSessionDraft'; text: string }
+  | { type: 'cancelSessionDraft' }
+  | { type: 'selectSessionAgent'; agentId?: string };
 
 export function parseWebviewMessage(value: unknown): WebviewMessage | undefined {
   if (!isRecord(value) || typeof value.type !== 'string') return undefined;
   if (['ready', 'startConnection', 'restartConnection', 'beginLogin', 'startThread', 'refreshThreads', 'loadMoreThreads', 'interruptTurn', 'openOutputChannel', 'clearGraphSelection', 'initializeProjectMap', 'editProjectMap', 'scanProjectMap', 'fitGraph', 'runVisualizationDemo', 'stopVisualizationDemo'].includes(value.type)) {
     return { type: value.type } as WebviewMessage;
   }
+  if (value.type === 'startSessionDraft' || value.type === 'cancelSessionDraft') return { type: value.type };
+  if ((value.type === 'selectSession' || value.type === 'setSessionVisible' || value.type === 'setSessionExpanded') && typeof value.sessionId === 'string' && value.sessionId.trim() !== '') {
+    if (value.type === 'selectSession') return { type: value.type, sessionId: value.sessionId };
+    if (value.type === 'setSessionVisible' && typeof value.visible === 'boolean') return { type: value.type, sessionId: value.sessionId, visible: value.visible };
+    if (value.type === 'setSessionExpanded' && typeof value.expanded === 'boolean') return { type: value.type, sessionId: value.sessionId, expanded: value.expanded };
+    return undefined;
+  }
+  if (value.type === 'setChatOpen' && typeof value.open === 'boolean') return { type: value.type, open: value.open };
+  if (value.type === 'setMapMode' && (value.mode === 'focus' || value.mode === 'compareVisible')) return { type: value.type, mode: value.mode };
+  if (value.type === 'reorderVisibleSessions' && stringIds(value.sessionIds)) return { type: value.type, sessionIds: value.sessionIds };
+  if (value.type === 'updateSessionDraft' && typeof value.text === 'string') return { type: value.type, text: value.text };
+  if (value.type === 'selectSessionAgent' && (value.agentId === undefined || (typeof value.agentId === 'string' && value.agentId.trim() !== ''))) return value.agentId === undefined ? { type: value.type } : { type: value.type, agentId: value.agentId };
   if ((value.type === 'previewThread' || value.type === 'resumeThread') && typeof value.threadId === 'string') {
     return value.type === 'resumeThread'
       ? { type: value.type, threadId: value.threadId, confirmActive: value.confirmActive === true }
@@ -57,3 +79,5 @@ export function parseWebviewMessage(value: unknown): WebviewMessage | undefined 
   if (value.type === 'saveProjectMap' && isRecord(value.map)) return { type: value.type, map: value.map };
   return undefined;
 }
+
+function stringIds(value: unknown): value is string[] { return Array.isArray(value) && value.every(id => typeof id === 'string' && id.trim() !== ''); }

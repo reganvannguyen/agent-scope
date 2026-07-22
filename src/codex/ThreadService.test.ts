@@ -12,11 +12,11 @@ function mockClient(handler: (method: string, params: unknown) => unknown): RpcC
 }
 
 describe('ThreadService', () => {
-  it('lists threads across workspaces with pagination', async () => {
+  it('lists only current-project threads with pagination', async () => {
     const client = mockClient((method, params) => {
       expect(method).toBe('thread/list');
-      expect(params).toMatchObject({ cwd: null, sortDirection: 'desc' });
-      return { data: [baseThread], nextCursor: 'next', backwardsCursor: null };
+      expect(params).toMatchObject({ cwd: 'C:/repo', sortDirection: 'desc' });
+      return { data: [baseThread, { ...baseThread, id: 'other', cwd: 'C:/other' }], nextCursor: 'next', backwardsCursor: null };
     });
     await expect(new ThreadService(client, 'C:/repo').list()).resolves.toEqual({
       threads: [{ id: 'thread-1', title: 'Hello', preview: 'Hello\nworld', cwd: 'C:/repo', status: 'idle', updatedAt: 10 }],

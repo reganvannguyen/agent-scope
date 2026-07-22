@@ -5,6 +5,7 @@ import type { ConnectionState } from '../codex/ProtocolTypes';
 import type { PendingServerRequest } from '../codex/ApprovalService';
 import type { ArchitectureEdgeSuggestion, ArchitectureSuggestion } from '../project-map/ProjectMapScanner';
 import type { VisualizationSnapshot } from '../visualization/VisualizationCoordinator';
+import type { SessionWorkspaceState } from './SessionWorkspace';
 
 export interface ConversationItem {
   id: string;
@@ -43,6 +44,7 @@ export interface ThreadDetail extends ThreadSummary {
 }
 
 export interface AppState {
+  sessionWorkspace: SessionWorkspaceState;
   connection: ConnectionState;
   workspaceCwd?: string;
   account?: AccountState;
@@ -71,7 +73,7 @@ export interface AppState {
 
 export function initialAppState(): AppState {
   return {
-    connection: 'stopped', models: [], modes: [], selectedMode: 'default', threads: [], nextThreadCursor: null,
+    connection: 'stopped', sessionWorkspace: { library: {}, libraryOrder: [], visibleSessionIds: [], expandedSessionIds: [], chatOpen: false, mapMode: 'focus' }, models: [], modes: [], selectedMode: 'default', threads: [], nextThreadCursor: null,
     draft: '', sidebarCollapsed: false, sidebarWidth: 250, composerHeight: 112, viewMode: 'combined', completedAgentDisplay: 'collapse', projectSuggestions: [], projectEdgeSuggestions: [], pendingRequests: [], stopping: false
   };
 }

@@ -3,11 +3,11 @@ import type { Memento } from 'vscode';
 import { SessionPersistence } from './SessionPersistence';
 
 function memento(initial?: unknown): Memento {
-  let value = initial;
+  const values = new Map<string, unknown>(initial === undefined ? [] : [['codexAgentMap.selectedThreadId', initial]]);
   return {
-    keys: () => ['codexAgentMap.selectedThreadId'],
-    get: vi.fn((_key: string, defaultValue?: unknown) => value ?? defaultValue),
-    update: vi.fn((_key: string, next: unknown) => { value = next; return Promise.resolve(); })
+    keys: () => [...values.keys()],
+    get: vi.fn((key: string, defaultValue?: unknown) => values.get(key) ?? defaultValue),
+    update: vi.fn((key: string, next: unknown) => { values.set(key, next); return Promise.resolve(); })
   };
 }
 
@@ -22,5 +22,12 @@ describe('SessionPersistence', () => {
 
   it('rejects invalid persisted values', () => {
     expect(new SessionPersistence(memento({ prompt: 'private' })).selectedThreadId).toBeUndefined();
+  });
+
+  it('persists versioned lightweight session workspace preferences', async () => {
+    const storage = memento(); const persistence = new SessionPersistence(storage);
+    await persistence.save({ version: 1, visibleSessionIds: ['b', 'a'], selectedSessionId: 'a', expandedSessionIds: ['a'], chatOpen: true, mapMode: 'compareVisible' });
+    expect(persistence.preferences).toEqual({ version: 1, visibleSessionIds: ['b', 'a'], selectedSessionId: 'a', expandedSessionIds: ['a'], chatOpen: true, mapMode: 'compareVisible' });
+    expect(persistence.selectedThreadId).toBe('a');
   });
 });

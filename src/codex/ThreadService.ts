@@ -10,14 +10,14 @@ export class ThreadService {
 
   public async list(cursor: string | null = null): Promise<ThreadPage> {
     const raw = await this.client.request<unknown>('thread/list', {
-      cursor, cwd: null, sortKey: 'updated_at', sortDirection: 'desc', archived: false
+      cursor, cwd: this.cwd ?? null, sortKey: 'updated_at', sortDirection: 'desc', archived: false
     });
     if (!isRecord(raw) || !Array.isArray(raw.data) || (raw.nextCursor !== null && typeof raw.nextCursor !== 'string')) {
       throw new Error('Invalid thread/list response');
     }
     return { threads: raw.data.flatMap(value => {
       const item = parseSummary(value);
-      return item === undefined || item.preview.trim() === '' ? [] : [item];
+      return item === undefined || item.preview.trim() === '' || (this.cwd !== undefined && !samePath(item.cwd, this.cwd)) ? [] : [item];
     }), nextCursor: raw.nextCursor };
   }
 
@@ -125,3 +125,5 @@ function parseThreadStatus(value: unknown): ThreadSummary['status'] | undefined 
 function firstLine(value: string): string { return value.split(/\r?\n/u)[0]?.slice(0, 80) || 'Untitled thread'; }
 function stringValue(value: unknown): string | undefined { return typeof value === 'string' ? value : undefined; }
 function requireId(value: string): void { if (value.trim() === '') throw new Error('Thread ID is required'); }
+function samePath(left: string, right: string): boolean { return normalizePath(left) === normalizePath(right); }
+function normalizePath(value: string): string { return value.replace(/\\/gu, '/').replace(/\/$/u, '').toLocaleLowerCase(); }

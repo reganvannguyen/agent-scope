@@ -25,4 +25,11 @@ describe('parseWebviewMessage', () => {
     expect(parseWebviewMessage({ type: 'clearGraphSelection' })).toEqual({ type: 'clearGraphSelection' });
     expect(parseWebviewMessage({ type: 'editProjectMap' })).toEqual({ type: 'editProjectMap' });
   });
+  it('strictly validates session workspace commands', () => {
+    expect(parseWebviewMessage({ type: 'selectSession', sessionId: 's1' })).toEqual({ type: 'selectSession', sessionId: 's1' });
+    expect(parseWebviewMessage({ type: 'setSessionVisible', sessionId: 's1', visible: false })).toEqual({ type: 'setSessionVisible', sessionId: 's1', visible: false });
+    expect(parseWebviewMessage({ type: 'reorderVisibleSessions', sessionIds: ['s2', 's1'] })).toEqual({ type: 'reorderVisibleSessions', sessionIds: ['s2', 's1'] });
+    expect(parseWebviewMessage({ type: 'setMapMode', mode: 'all' })).toBeUndefined();
+    expect(parseWebviewMessage({ type: 'setSessionExpanded', sessionId: '', expanded: true })).toBeUndefined();
+  });
 });
